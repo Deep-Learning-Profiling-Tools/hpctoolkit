@@ -75,12 +75,6 @@
 #include "thread_data.h"
 #include "utilities/ip-normalized.h"
 
-#ifdef TORCH_MONITOR_ENABLE
-// FIXME(Keren)
-#include "sample-sources/torch-monitor/torch-monitor-logical.h"
-#include "sample-sources/torch-monitor/torch-monitor-api.h"
-#endif
-
 //
 // Misc externals (not in an include file)
 //
@@ -256,12 +250,6 @@ hpcrun_backtrace2cct(cct_bundle_t* cct, ucontext_t* context,
                      int skipInner, int isSync, void *data)
 {
   cct_node_t* n = NULL;
-#ifdef TORCH_MONITOR_ENABLE
-  if (torch_monitor_status() && !torch_monitor_native_stack_status()) {
-    TMSG(TORCH_MONITOR, "torch_monitor backtrace2cct invoked");
-    n = torch_monitor_backtrace2cct(cct, metricId, metricIncr);
-  } else
-#endif
   if (hpcrun_isLogicalUnwind()) {
     TMSG(LUSH,"lush backtrace2cct invoked");
     n = lush_backtrace2cct(cct, context, metricId, metricIncr, skipInner,

@@ -112,14 +112,14 @@ METHOD_FN(thread_fini_action)
 static void
 METHOD_FN(stop)
 {
-  torch_monitor_stop();
-
   TD_GET(ss_state)[self->sel_idx] = STOP;
 }
 
 static void
 METHOD_FN(shutdown)
 {
+  // TODO(Keren): where to add stop
+  //torch_monitor_stop();
   self->state = UNINIT;
 }
 
@@ -140,7 +140,7 @@ METHOD_FN(process_event_list, int lush_metrics)
   bool native_stack = false;
   char *native_stack_enable_str = NULL;
   control_knob_value_get_string("HPCRUN_TORCH_MONITOR_NATIVE_STACK_ENABLE", &native_stack_enable_str);
-  if (strcmp(native_stack_enable_str, "TRUE")) {
+  if (strcmp(native_stack_enable_str, "TRUE") == 0) {
     native_stack = true;
   }
 

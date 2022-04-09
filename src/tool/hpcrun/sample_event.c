@@ -83,6 +83,12 @@
 
 #include <lib/prof-lean/hpcrun-fmt.h>
 
+#ifdef TORCH_MONITOR_ENABLE
+// FIXME(Keren)
+#include "sample-sources/torch-monitor/torch-monitor-logical.h"
+#include "sample-sources/torch-monitor/torch-monitor-api.h"
+#endif
+
 #define HPCRUN_DEBUG_TRACING 0
 
 //*************************** Forward Declarations **************************
@@ -257,6 +263,8 @@ hpcrun_sample_callpath(void* context, int metricId,
   cct_node_t* node = NULL;
   epoch_t* epoch = td->core_profile_trace_data.epoch;
 
+
+
   // --------------------------------------
   // start of handling sample
   // --------------------------------------
@@ -277,8 +285,17 @@ hpcrun_sample_callpath(void* context, int metricId,
       if (data != NULL)
         data_aux = data->sample_data;
 
-      node  = hpcrun_backtrace2cct(&(epoch->csdata), context, metricId,
-                                   metricIncr, skipInner, isSync, data_aux);
+#ifdef TORCH_MONITOR_ENABLE
+      if (torch_monitor_status() && !torch_monitor_native_stack_status()) {
+        TMSG(TORCH_MONITOR, "torch_monitor backtrace2cct invoked");
+        node = torch_monitor_backtrace2cct(&(epoch->csdata), metricId, metricIncr);
+      } else {
+#endif
+        node  = hpcrun_backtrace2cct(&(epoch->csdata), context, metricId,
+          metricIncr, skipInner, isSync, data_aux);
+#ifdef TORCH_MONITOR_ENABLE
+      }
+#endif
 
       if (ENABLED(DUMP_BACKTRACES)) {
         hpcrun_bt_dump(td->btbuf_cur, "UNWIND");
@@ -287,8 +304,17 @@ hpcrun_sample_callpath(void* context, int metricId,
   }
   else {  // Partial unwind case
     cct_bundle_t* cct = &(td->core_profile_trace_data.epoch->csdata);
-    node = record_partial_unwind(cct, td->btbuf_beg, td->btbuf_cur - 1,
+#ifdef TORCH_MONITOR_ENABLE
+    if (torch_monitor_status() && !torch_monitor_native_stack_status()) {
+      TMSG(TORCH_MONITOR, "torch_monitor backtrace2cct invoked");
+      node = torch_monitor_backtrace2cct(cct, metricId, metricIncr);
+    } else {
+#endif
+      node = record_partial_unwind(cct, td->btbuf_beg, td->btbuf_cur - 1,
         metricId, metricIncr, skipInner, NULL);
+#ifdef TORCH_MONITOR_ENABLE
+    }
+#endif
     hpcrun_cleanup_partial_unwind();
   }
   td->current_jmp_buf = old;
