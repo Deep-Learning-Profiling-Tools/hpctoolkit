@@ -67,11 +67,14 @@
 #include "../sample_source_obj.h"
 #include "../common.h"
 
+#include <hpcrun/device-finalizers.h>
 #include <hpcrun/messages/messages.h>
 #include <hpcrun/control-knob.h>
 #include <hpcrun/thread_data.h>
 
 #include "torch-monitor-api.h"
+
+static device_finalizer_fn_entry_t device_finalizer_shutdown;
 
 //******************************************************************************
 // interface operations
@@ -119,7 +122,6 @@ static void
 METHOD_FN(shutdown)
 {
   // TODO(Keren): where to add stop
-  //torch_monitor_stop();
   self->state = UNINIT;
 }
 
@@ -145,6 +147,9 @@ METHOD_FN(process_event_list, int lush_metrics)
   }
 
   torch_monitor_start(native_stack);
+
+  device_finalizer_shutdown.fn = torch_monitor_stop;
+  device_finalizer_register(device_finalizer_type_shutdown, &device_finalizer_shutdown);
 }
 
 static void
