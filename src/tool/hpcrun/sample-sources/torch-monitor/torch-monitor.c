@@ -121,7 +121,6 @@ METHOD_FN(stop)
 static void
 METHOD_FN(shutdown)
 {
-  // TODO(Keren): where to add stop
   self->state = UNINIT;
 }
 

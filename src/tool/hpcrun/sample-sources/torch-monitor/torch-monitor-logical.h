@@ -30,4 +30,4 @@ torch_monitor_backtrace2cct
  hpcrun_metricVal_t metric_incr
 );
 
-#endif
+#endif  // torch_monitor_logical_h

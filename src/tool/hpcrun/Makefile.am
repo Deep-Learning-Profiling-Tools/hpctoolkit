@@ -536,6 +536,7 @@ if OPT_ENABLE_TORCH_MONITOR
 MY_TORCH_MONITOR_FILES = sample-sources/torch-monitor/torch-monitor-api.c	\
   sample-sources/torch-monitor/torch-monitor-logical.c	\
   sample-sources/torch-monitor/torch-monitor-thread-obj.c	\
+  sample-sources/torch-monitor/torch-monitor-forward-cct-map.c	\
   sample-sources/torch-monitor/torch-monitor.c
 endif
 

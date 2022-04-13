@@ -291,6 +291,18 @@ hpcrun_sample_callpath(void* context, int metricId,
         node = torch_monitor_backtrace2cct(&(epoch->csdata), metricId, metricIncr);
       } else {
 #endif
+        void* pc = hpcrun_context_pc(context);
+
+        TMSG(SAMPLE_CALLPATH, "%s taking profile sample @ %p", __func__, pc);
+        TMSG(SAMPLE_METRIC_DATA, "--metric data for sample (as a uint64_t) = %"PRIu64"", metricIncr);
+
+        /* check to see if shared library loadmap (of current epoch) has changed out from under us */
+        epoch = hpcrun_check_for_new_loadmap(epoch);
+
+        void *data_aux = NULL;
+        if (data != NULL)
+          data_aux = data->sample_data;
+
         node  = hpcrun_backtrace2cct(&(epoch->csdata), context, metricId,
           metricIncr, skipInner, isSync, data_aux);
 #ifdef TORCH_MONITOR_ENABLE
