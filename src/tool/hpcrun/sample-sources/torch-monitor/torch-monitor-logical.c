@@ -59,19 +59,21 @@ torch_monitor_backtrace2cct
 
     TMSG(TORCH_MONITOR, "Frame start ==================================================");
 
-    size_t i;
-    for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
-      hpcrun_ensure_btbuf_avail();
+    if (thread_obj->python_cur_num_states > 0) {
+      int i;
+      for (i = thread_obj->python_cur_num_states - 1; i >= 0; --i) {
+        hpcrun_ensure_btbuf_avail();
 
-      torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
-      TMSG(TORCH_MONITOR, "\t%s %s:%u", python_state->file_name, python_state->function_name, python_state->lineno);
-      uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata,
-        python_state->function_name, python_state->file_name, python_state->lineno);
-      ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
-        fid, python_state->lineno);
+        torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
+        TMSG(TORCH_MONITOR, "\t%s %s:%u", python_state->file_name, python_state->function_name, python_state->lineno);
+        uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata,
+          python_state->function_name, python_state->file_name, python_state->lineno);
+        ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
+          fid, python_state->lineno);
 
-      td->btbuf_cur->ip_norm = ip_norm;
-      td->btbuf_cur++;
+        td->btbuf_cur->ip_norm = ip_norm;
+        td->btbuf_cur++;
+      }
     }
 
     TMSG(TORCH_MONITOR, "Frame end ==================================================");
