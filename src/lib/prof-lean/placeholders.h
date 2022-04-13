@@ -112,6 +112,10 @@ enum hpcrun_placeholder {
   hpcrun_placeholder_gpu_memset  = PLACEHOLDER_VALUE('G','P','U','M','e','m','s','t'),
   hpcrun_placeholder_gpu_sync    = PLACEHOLDER_VALUE('G','P','U',' ','S','y','n','c'),
   hpcrun_placeholder_gpu_trace   = PLACEHOLDER_VALUE('G','P','U','T','r','a','c','e'),
+
+  // Pytorch operations
+  hpcrun_placeholder_torch_monitor_forward  = PLACEHOLDER_VALUE('F','O','R','W','A','R','D','?'),
+  hpcrun_placeholder_torch_monitor_backward = PLACEHOLDER_VALUE('B','A','C','K','W','A','R','D'),
 };
 
 //*****************************************************************************

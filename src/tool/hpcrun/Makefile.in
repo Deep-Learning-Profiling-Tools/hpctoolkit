@@ -618,6 +618,7 @@ am__libhpcrun_la_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	sample-sources/torch-monitor/torch-monitor-logical.c \
 	sample-sources/torch-monitor/torch-monitor-thread-obj.c \
 	sample-sources/torch-monitor/torch-monitor-forward-cct-map.c \
+	sample-sources/torch-monitor/torch-monitor-op-placeholders.c \
 	sample-sources/torch-monitor/torch-monitor.c \
 	sample-sources/nvidia.c gpu/nvidia/cubin-hash-map.c \
 >>>>>>> 0ee101039 (Compile through after integrating torch-monitor)
@@ -865,6 +866,7 @@ am__objects_27 = trampoline/aarch64/libhpcrun_la-aarch64-tramp.lo \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_la-torch-monitor-logical.lo \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_la-torch-monitor-thread-obj.lo \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_la-torch-monitor-forward-cct-map.lo \
+@OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_la-torch-monitor-op-placeholders.lo \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_la-torch-monitor.lo
 @OPT_ENABLE_TORCH_MONITOR_TRUE@am__objects_32 = $(am__objects_31)
 @OPT_ENABLE_CUPTI_TRUE@am__objects_33 =  \
@@ -1251,6 +1253,7 @@ am__libhpcrun_o_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	sample-sources/torch-monitor/torch-monitor-logical.c \
 	sample-sources/torch-monitor/torch-monitor-thread-obj.c \
 	sample-sources/torch-monitor/torch-monitor-forward-cct-map.c \
+	sample-sources/torch-monitor/torch-monitor-op-placeholders.c \
 	sample-sources/torch-monitor/torch-monitor.c \
 	sample-sources/nvidia.c gpu/nvidia/cubin-hash-map.c \
 	gpu/nvidia/cubin-id-map.c gpu/nvidia/cubin-symbols.c \
@@ -1500,6 +1503,7 @@ am__objects_69 =  \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_o-torch-monitor-logical.$(OBJEXT) \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_o-torch-monitor-thread-obj.$(OBJEXT) \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_o-torch-monitor-forward-cct-map.$(OBJEXT) \
+@OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.$(OBJEXT) \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@	sample-sources/torch-monitor/libhpcrun_o-torch-monitor.$(OBJEXT)
 @OPT_ENABLE_TORCH_MONITOR_TRUE@am__objects_72 = $(am__objects_71)
 @OPT_ENABLE_CUPTI_TRUE@am__objects_73 = sample-sources/libhpcrun_o-nvidia.$(OBJEXT) \
@@ -2382,6 +2386,7 @@ MY_AARCH64_FILES = \
 @OPT_ENABLE_TORCH_MONITOR_TRUE@  sample-sources/torch-monitor/torch-monitor-logical.c	\
 @OPT_ENABLE_TORCH_MONITOR_TRUE@  sample-sources/torch-monitor/torch-monitor-thread-obj.c	\
 @OPT_ENABLE_TORCH_MONITOR_TRUE@  sample-sources/torch-monitor/torch-monitor-forward-cct-map.c	\
+@OPT_ENABLE_TORCH_MONITOR_TRUE@  sample-sources/torch-monitor/torch-monitor-op-placeholders.c	\
 @OPT_ENABLE_TORCH_MONITOR_TRUE@  sample-sources/torch-monitor/torch-monitor.c
 
 @OPT_ENABLE_CUPTI_TRUE@MY_CUPTI_FILES = sample-sources/nvidia.c	\
@@ -3548,6 +3553,9 @@ sample-sources/torch-monitor/libhpcrun_la-torch-monitor-thread-obj.lo:  \
 sample-sources/torch-monitor/libhpcrun_la-torch-monitor-forward-cct-map.lo:  \
 	sample-sources/torch-monitor/$(am__dirstamp) \
 	sample-sources/torch-monitor/$(DEPDIR)/$(am__dirstamp)
+sample-sources/torch-monitor/libhpcrun_la-torch-monitor-op-placeholders.lo:  \
+	sample-sources/torch-monitor/$(am__dirstamp) \
+	sample-sources/torch-monitor/$(DEPDIR)/$(am__dirstamp)
 sample-sources/torch-monitor/libhpcrun_la-torch-monitor.lo:  \
 	sample-sources/torch-monitor/$(am__dirstamp) \
 	sample-sources/torch-monitor/$(DEPDIR)/$(am__dirstamp)
@@ -4249,6 +4257,9 @@ sample-sources/torch-monitor/libhpcrun_o-torch-monitor-thread-obj.$(OBJEXT):  \
 	sample-sources/torch-monitor/$(am__dirstamp) \
 	sample-sources/torch-monitor/$(DEPDIR)/$(am__dirstamp)
 sample-sources/torch-monitor/libhpcrun_o-torch-monitor-forward-cct-map.$(OBJEXT):  \
+	sample-sources/torch-monitor/$(am__dirstamp) \
+	sample-sources/torch-monitor/$(DEPDIR)/$(am__dirstamp)
+sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.$(OBJEXT):  \
 	sample-sources/torch-monitor/$(am__dirstamp) \
 	sample-sources/torch-monitor/$(DEPDIR)/$(am__dirstamp)
 sample-sources/torch-monitor/libhpcrun_o-torch-monitor.$(OBJEXT):  \
@@ -4959,11 +4970,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-forward-cct-map.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-logical.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-op-placeholders.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-thread-obj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-api.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-forward-cct-map.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-logical.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-op-placeholders.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-thread-obj.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@syscalls/$(DEPDIR)/libhpcrun_la-poll.Plo@am__quote@
@@ -6520,6 +6533,13 @@ sample-sources/torch-monitor/libhpcrun_la-torch-monitor-forward-cct-map.lo: samp
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sample-sources/torch-monitor/torch-monitor-forward-cct-map.c' object='sample-sources/torch-monitor/libhpcrun_la-torch-monitor-forward-cct-map.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o sample-sources/torch-monitor/libhpcrun_la-torch-monitor-forward-cct-map.lo `test -f 'sample-sources/torch-monitor/torch-monitor-forward-cct-map.c' || echo '$(srcdir)/'`sample-sources/torch-monitor/torch-monitor-forward-cct-map.c
+
+sample-sources/torch-monitor/libhpcrun_la-torch-monitor-op-placeholders.lo: sample-sources/torch-monitor/torch-monitor-op-placeholders.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT sample-sources/torch-monitor/libhpcrun_la-torch-monitor-op-placeholders.lo -MD -MP -MF sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-op-placeholders.Tpo -c -o sample-sources/torch-monitor/libhpcrun_la-torch-monitor-op-placeholders.lo `test -f 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c' || echo '$(srcdir)/'`sample-sources/torch-monitor/torch-monitor-op-placeholders.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-op-placeholders.Tpo sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor-op-placeholders.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sample-sources/torch-monitor/torch-monitor-op-placeholders.c' object='sample-sources/torch-monitor/libhpcrun_la-torch-monitor-op-placeholders.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o sample-sources/torch-monitor/libhpcrun_la-torch-monitor-op-placeholders.lo `test -f 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c' || echo '$(srcdir)/'`sample-sources/torch-monitor/torch-monitor-op-placeholders.c
 
 sample-sources/torch-monitor/libhpcrun_la-torch-monitor.lo: sample-sources/torch-monitor/torch-monitor.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT sample-sources/torch-monitor/libhpcrun_la-torch-monitor.lo -MD -MP -MF sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_la-torch-monitor.Tpo -c -o sample-sources/torch-monitor/libhpcrun_la-torch-monitor.lo `test -f 'sample-sources/torch-monitor/torch-monitor.c' || echo '$(srcdir)/'`sample-sources/torch-monitor/torch-monitor.c
@@ -9488,6 +9508,20 @@ sample-sources/torch-monitor/libhpcrun_o-torch-monitor-forward-cct-map.obj: samp
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sample-sources/torch-monitor/torch-monitor-forward-cct-map.c' object='sample-sources/torch-monitor/libhpcrun_o-torch-monitor-forward-cct-map.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o sample-sources/torch-monitor/libhpcrun_o-torch-monitor-forward-cct-map.obj `if test -f 'sample-sources/torch-monitor/torch-monitor-forward-cct-map.c'; then $(CYGPATH_W) 'sample-sources/torch-monitor/torch-monitor-forward-cct-map.c'; else $(CYGPATH_W) '$(srcdir)/sample-sources/torch-monitor/torch-monitor-forward-cct-map.c'; fi`
+
+sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.o: sample-sources/torch-monitor/torch-monitor-op-placeholders.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.o -MD -MP -MF sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-op-placeholders.Tpo -c -o sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.o `test -f 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c' || echo '$(srcdir)/'`sample-sources/torch-monitor/torch-monitor-op-placeholders.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-op-placeholders.Tpo sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-op-placeholders.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sample-sources/torch-monitor/torch-monitor-op-placeholders.c' object='sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.o `test -f 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c' || echo '$(srcdir)/'`sample-sources/torch-monitor/torch-monitor-op-placeholders.c
+
+sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.obj: sample-sources/torch-monitor/torch-monitor-op-placeholders.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.obj -MD -MP -MF sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-op-placeholders.Tpo -c -o sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.obj `if test -f 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c'; then $(CYGPATH_W) 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c'; else $(CYGPATH_W) '$(srcdir)/sample-sources/torch-monitor/torch-monitor-op-placeholders.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-op-placeholders.Tpo sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor-op-placeholders.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sample-sources/torch-monitor/torch-monitor-op-placeholders.c' object='sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o sample-sources/torch-monitor/libhpcrun_o-torch-monitor-op-placeholders.obj `if test -f 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c'; then $(CYGPATH_W) 'sample-sources/torch-monitor/torch-monitor-op-placeholders.c'; else $(CYGPATH_W) '$(srcdir)/sample-sources/torch-monitor/torch-monitor-op-placeholders.c'; fi`
 
 sample-sources/torch-monitor/libhpcrun_o-torch-monitor.o: sample-sources/torch-monitor/torch-monitor.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT sample-sources/torch-monitor/libhpcrun_o-torch-monitor.o -MD -MP -MF sample-sources/torch-monitor/$(DEPDIR)/libhpcrun_o-torch-monitor.Tpo -c -o sample-sources/torch-monitor/libhpcrun_o-torch-monitor.o `test -f 'sample-sources/torch-monitor/torch-monitor.c' || echo '$(srcdir)/'`sample-sources/torch-monitor/torch-monitor.c

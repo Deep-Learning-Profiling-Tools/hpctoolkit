@@ -178,8 +178,8 @@ forward_cmp_gt
 {
   if (left.forward_thread_id > right.forward_thread_id) {
     return true;
-  } else if (left.sequence_number > right.sequence_number) {
-    return true;
+  } else if (left.forward_thread_id == right.forward_thread_id) {
+    return left.sequence_number > right.sequence_number;
   }
   return false;
 }
@@ -194,8 +194,8 @@ forward_cmp_lt
 {
   if (left.forward_thread_id < right.forward_thread_id) {
     return true;
-  } else if (left.sequence_number < right.sequence_number) {
-    return true;
+  } else if (left.forward_thread_id == right.forward_thread_id) {
+    return left.sequence_number < right.sequence_number;
   }
   return false;
 }
@@ -341,11 +341,11 @@ struct torch_monitor_forward_cct_map_entry_s {
   struct torch_monitor_forward_cct_map_entry_s *right;
   forward_key_t key;
   cct_node_t *cct;
-  int backoff;  // base-4 based backoff policy, if failed backoff = 1, otherwise backoff += 1
 };
 
-static __thread torch_monitor_forward_cct_map_entry_t *map_root = NULL;
-static __thread torch_monitor_forward_cct_map_entry_t *free_list = NULL;
+// TODO(Keren): pass forward records to the backward phase
+static torch_monitor_forward_cct_map_entry_t *map_root = NULL;
+static torch_monitor_forward_cct_map_entry_t *free_list = NULL;
 
 typed_splay_impl(forward)
 

@@ -5,6 +5,7 @@
 #include <hpcrun/cct_insert_backtrace.h>
 #include <hpcrun/safe-sampling.h>
 #include <hpcrun/thread_data.h>
+#include <hpcrun/gpu/gpu-application-thread-api.h>
 
 #include <torch_monitor.h>
 
@@ -34,6 +35,8 @@ torch_monitor_backtrace2cct
   cct_node_t *node = NULL;
 
   if (thread_obj->forward_cct != NULL) {
+    TMSG(TORCH_MONITOR, "Fast path");
+
     // If this op happens between op_enter and op_exit, we used cached cct node
     node = thread_obj->forward_cct;
     metric_data_list_t *metric_set = hpcrun_reify_metric_set(node, metric_id);
@@ -42,6 +45,8 @@ torch_monitor_backtrace2cct
       upd_proc(metric_id, metric_set, metric_incr);
     }
   } else {
+    TMSG(TORCH_MONITOR, "Slow path");
+
     // Otherwise, we unwind python call path
     cct_node_t* cct_cursor = cct->tree_root;
     torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
@@ -52,14 +57,14 @@ torch_monitor_backtrace2cct
     td->btbuf_cur = td->btbuf_beg;  // innermost
     td->btbuf_sav = td->btbuf_end;  // what is it? is it needed?
 
-    TMSG(TORCH_MONITOR, "Frame start ===============");
+    TMSG(TORCH_MONITOR, "Frame start ==================================================");
 
     size_t i;
     for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
       hpcrun_ensure_btbuf_avail();
 
       torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
-      TMSG(TORCH_MONITOR, "\t%s %s:%zu\n", python_state->file_name, python_state->function_name, python_state->lineno);
+      TMSG(TORCH_MONITOR, "\t%s %s:%u", python_state->file_name, python_state->function_name, python_state->lineno);
       uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata,
         python_state->function_name, python_state->file_name, python_state->lineno);
       ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
@@ -69,7 +74,7 @@ torch_monitor_backtrace2cct
       td->btbuf_cur++;
     }
 
-    TMSG(TORCH_MONITOR, "Frame end ===============");
+    TMSG(TORCH_MONITOR, "Frame end ==================================================");
 
     frame_t* bt_beg = td->btbuf_beg;      // innermost, inclusive 
     frame_t* bt_end = td->btbuf_cur - 1;  // outermost, inclusive
