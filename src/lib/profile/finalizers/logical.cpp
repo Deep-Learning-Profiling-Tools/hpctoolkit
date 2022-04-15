@@ -50,6 +50,7 @@
 #include "lib/prof-lean/hpcfmt.h"
 
 #include <cstring>
+#include <iostream>
 
 using namespace hpctoolkit;
 using namespace finalizers;
