@@ -272,3 +272,10 @@ void hpcrun_logical_metadata_cleanup(logical_metadata_store_t* store) {
   }
   fclose(f);
 }
+
+const char *hpcrun_logical_metadata_path_get(logical_metadata_store_t *store) {
+  if (store == NULL) {
+    return NULL;
+  }
+  return store->path;
+}

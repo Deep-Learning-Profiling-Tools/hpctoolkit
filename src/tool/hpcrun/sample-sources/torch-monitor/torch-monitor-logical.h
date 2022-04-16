@@ -21,6 +21,13 @@ torch_monitor_logical_unregister
  void
 );
 
+cct_node_t *
+torch_monitor_backtrace_function_insert
+(
+ cct_node_t *cct,
+ const char *function_name
+);
+
 // Active backtrace: python stack only
 cct_node_t *
 torch_monitor_backtrace2cct

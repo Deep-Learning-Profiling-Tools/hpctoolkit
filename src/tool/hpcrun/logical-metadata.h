@@ -37,5 +37,8 @@ ip_normalized_t hpcrun_logical_metadata_ipnorm(
 // Write metadata infor to disk
 void hpcrun_logical_metadata_cleanup(logical_metadata_store_t* store);
 
+// Get metadata's path
+const char *hpcrun_logical_metadata_path_get(logical_metadata_store_t *store);
+
 #endif  // logical_metadata_h
 

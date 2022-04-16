@@ -15,9 +15,23 @@ static bool torch_monitor_native_stack_enabled = false;
 
 static logical_metadata_store_t *torch_monitor_metadata = NULL;
 
-
 bool torch_monitor_native_stack_status() {
   return torch_monitor_native_stack_enabled;
+}
+
+
+cct_node_t *
+torch_monitor_backtrace_function_insert
+(
+ cct_node_t *cct,
+ const char *function_name
+)
+{
+
+  const char *metadata_path = hpcrun_logical_metadata_path_get(torch_monitor_metadata);
+  uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata, function_name, metadata_path, 0);
+  ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata, fid, 0);
+  return hpcrun_cct_insert_ip_norm(cct, ip_norm, true);
 }
 
 
@@ -35,7 +49,7 @@ torch_monitor_backtrace2cct
   cct_node_t *node = NULL;
 
   if (thread_obj->prev_cct != NULL) {
-    TMSG(TORCH_MONITOR, "Fast path");
+    TMSG(TORCH_MONITOR, "Fast path backtrace2cct");
 
     // If this op happens between op_enter and op_exit, we used cached cct node
     node = thread_obj->prev_cct;
@@ -45,7 +59,7 @@ torch_monitor_backtrace2cct
       upd_proc(metric_id, metric_set, metric_incr);
     }
   } else {
-    TMSG(TORCH_MONITOR, "Slow path");
+    TMSG(TORCH_MONITOR, "Slow path backtrace2cct");
 
     // Otherwise, we unwind python call path
     cct_node_t* cct_cursor = cct->tree_root;
@@ -59,21 +73,19 @@ torch_monitor_backtrace2cct
 
     TMSG(TORCH_MONITOR, "Frame start ==================================================");
 
-    if (thread_obj->python_cur_num_states > 0) {
-      int i;
-      for (i = thread_obj->python_cur_num_states - 1; i >= 0; --i) {
-        hpcrun_ensure_btbuf_avail();
+    int i;
+    for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
+      hpcrun_ensure_btbuf_avail();
 
-        torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
-        TMSG(TORCH_MONITOR, "\t%s %s:%u", python_state->file_name, python_state->function_name, python_state->lineno);
-        uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata,
-          python_state->function_name, python_state->file_name, python_state->function_first_lineno);
-        ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
-          fid, python_state->lineno);
+      torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
+      TMSG(TORCH_MONITOR, "\t%s %s:%u", python_state->file_name, python_state->function_name, python_state->lineno);
+      uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata,
+        python_state->function_name, python_state->file_name, python_state->function_first_lineno);
+      ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
+        fid, python_state->lineno);
 
-        td->btbuf_cur->ip_norm = ip_norm;
-        td->btbuf_cur++;
-      }
+      td->btbuf_cur->ip_norm = ip_norm;
+      td->btbuf_cur++;
     }
 
     TMSG(TORCH_MONITOR, "Frame end ==================================================");

@@ -40,6 +40,7 @@ torch_monitor_status
 static cct_node_t *
 forward_cct_get
 (
+ const char *function_name,
  torch_monitor_thread_obj_t *thread_obj
 )
 {
@@ -51,6 +52,9 @@ forward_cct_get
 
   hpcrun_safe_enter(); 
   cct_node_t *cct = hpcrun_sample_callpath(NULL, zero_metric_id, zero_metric_incr, 0, 1, NULL).sample_node;
+  if (function_name != NULL) {
+    cct = torch_monitor_backtrace_function_insert(cct, function_name);
+  }
   hpcrun_safe_exit();
 
   return cct;
@@ -78,18 +82,19 @@ forward_function_callback
   uint64_t forward_thread_id = callback_data->current_thread_id;
   int64_t sequence_number = callback_data->data.op_data.sequence_number;
   uint32_t nested_level = callback_data->data.op_data.nested_level;
+  const char *function_name = callback_data->data.op_data.name;
  
   thread_obj->thread_state |= TORCH_MONITOR_THREAD_STATE_FORWARD;
 
   TMSG(TORCH_MONITOR, "Enter forward level %u state %p", nested_level, thread_obj->thread_state);
 
-  if (sequence_number == -1 && nested_level != 0) {
+  if (sequence_number == -1 || nested_level != 0) {
     // sequence_number == -1: This op may not have a corresponding backward call
     // nested_level != 0: This op isn't the entry to aten
     return;
   }
 
-  cct_node_t *cct = forward_cct_get(thread_obj);
+  cct_node_t *cct = forward_cct_get(function_name, thread_obj);
   forward_prev_cct_update(cct, thread_obj);
 
   // A node in a computation graph can be without backward operations.
