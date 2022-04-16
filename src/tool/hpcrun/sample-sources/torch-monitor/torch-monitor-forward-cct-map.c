@@ -45,6 +45,7 @@
 #include "torch-monitor-forward-cct-map.h"
 
 #include <lib/prof-lean/splay-macros.h>
+#include <lib/prof-lean/spinlock.h>
 #include <hpcrun/memory/hpcrun-malloc.h>
 
 //******************************************************************************
@@ -344,6 +345,7 @@ struct torch_monitor_forward_cct_map_entry_s {
 };
 
 // TODO(Keren): pass forward records to the backward phase
+static spinlock_t map_lock = SPINLOCK_UNLOCKED;
 static torch_monitor_forward_cct_map_entry_t *map_root = NULL;
 static torch_monitor_forward_cct_map_entry_t *free_list = NULL;
 
@@ -372,12 +374,16 @@ torch_monitor_forward_cct_map_insert
  cct_node_t *cct
 )
 {
+  spinlock_lock(&map_lock);
+
   torch_monitor_forward_cct_map_entry_t *entry = st_lookup(&map_root, key);
 
   if (entry == NULL) {
     entry = torch_monitor_forward_cct_map_new(key, cct);
     st_insert(&map_root, entry);
   }
+
+  spinlock_unlock(&map_lock);
 }
 
 
@@ -387,7 +393,15 @@ torch_monitor_forward_cct_map_lookup
  forward_key_t key
 )
 {
-  return st_lookup(&map_root, key);
+  torch_monitor_forward_cct_map_entry_t *entry = NULL;
+
+  spinlock_lock(&map_lock);
+
+  entry = st_lookup(&map_root, key);
+
+  spinlock_unlock(&map_lock);
+
+  return entry;
 }
 
 

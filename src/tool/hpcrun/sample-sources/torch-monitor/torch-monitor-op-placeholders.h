@@ -44,23 +44,17 @@
 #ifndef torch_monitor_op_placeholders_h
 #define torch_monitor_op_placeholders_h
 
-
-
 //******************************************************************************
 // system includes
 //******************************************************************************
 
 #include <stdint.h>
 
-
-
 //******************************************************************************
 // local includes
 //******************************************************************************
 
 #include <hpcrun/utilities/ip-normalized.h>
-
-
 
 //******************************************************************************
 // type declarations
@@ -73,70 +67,16 @@ typedef enum torch_monitor_op_placeholder_type_t {
 } torch_monitor_op_placeholder_type_t;
 
 
-typedef uint32_t torch_monitor_op_placeholder_flags_t;
-
-
-typedef struct torch_monitor_op_ccts_t {
-  cct_node_t *ccts[torch_monitor_op_placeholder_type_count];
-} torch_monitor_op_ccts_t;
-
-
-
-//******************************************************************************
-// public data
-//******************************************************************************
-
-extern torch_monitor_op_placeholder_flags_t torch_monitor_op_placeholder_flags_all;
-extern torch_monitor_op_placeholder_flags_t torch_monitor_op_placeholder_flags_none;
-
-
-
 //******************************************************************************
 // interface operations
 //******************************************************************************
 
-ip_normalized_t
-torch_monitor_op_placeholder_ip
-(
- torch_monitor_op_placeholder_type_t type
-);
-
-
-// this function implements bulk insertion. ccts for all placeholders
-// with flags set will be inserted as children of api_node. ccts for
-// all placeholders whose flags are 0 will be initialized to null.
-void
-torch_monitor_op_ccts_insert
+cct_node_t *
+torch_monitor_op_cct_insert
 (
  cct_node_t *api_node,
- torch_monitor_op_ccts_t *torch_monitor_op_ccts,
- torch_monitor_op_placeholder_flags_t flags
-);
-
-
-cct_node_t *
-torch_monitor_op_ccts_get
-(
- torch_monitor_op_ccts_t *torch_monitor_op_ccts,
  torch_monitor_op_placeholder_type_t type
 );
-
-
-void
-torch_monitor_op_placeholder_flags_set
-(
- torch_monitor_op_placeholder_flags_t *flags,
- torch_monitor_op_placeholder_type_t type
-);
-
-
-bool
-torch_monitor_op_placeholder_flags_is_set
-(
- torch_monitor_op_placeholder_flags_t flags,
- torch_monitor_op_placeholder_type_t type
-);
-
 
 
 #endif

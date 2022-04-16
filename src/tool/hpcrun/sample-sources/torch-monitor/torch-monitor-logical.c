@@ -34,11 +34,11 @@ torch_monitor_backtrace2cct
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
   cct_node_t *node = NULL;
 
-  if (thread_obj->forward_cct != NULL) {
+  if (thread_obj->prev_cct != NULL) {
     TMSG(TORCH_MONITOR, "Fast path");
 
     // If this op happens between op_enter and op_exit, we used cached cct node
-    node = thread_obj->forward_cct;
+    node = thread_obj->prev_cct;
     metric_data_list_t *metric_set = hpcrun_reify_metric_set(node, metric_id);
     metric_upd_proc_t *upd_proc = hpcrun_get_metric_proc(metric_id);
     if (upd_proc) {

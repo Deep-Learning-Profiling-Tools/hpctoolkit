@@ -60,51 +60,8 @@
 #include "lib/prof-lean/placeholders.h"
 #include "torch-monitor-op-placeholders.h"
 
-
-
-//******************************************************************************
-// macros
-//******************************************************************************
-
-#define SET_LOW_N_BITS(n, type) (~(((type) ~0) << n))
-
-
-//******************************************************************************
-// public data
-//******************************************************************************
-
-torch_monitor_op_placeholder_flags_t torch_monitor_op_placeholder_flags_none = 0; 
-
-torch_monitor_op_placeholder_flags_t torch_monitor_op_placeholder_flags_all =
-  SET_LOW_N_BITS(torch_monitor_op_placeholder_type_count, torch_monitor_op_placeholder_flags_t);
-
-
-//******************************************************************************
-// private operations
-//******************************************************************************
-
-// debugging support
-bool
-torch_monitor_op_ccts_empty
-(
- torch_monitor_op_ccts_t *torch_monitor_op_ccts
-)
-{
-  int i;
-  for (i = 0; i < torch_monitor_op_placeholder_type_count; i++) {
-    if (torch_monitor_op_ccts->ccts[i] != NULL) return false;
-  }
-  return true;
-}
-
-
-
-//******************************************************************************
-// interface operations
-//******************************************************************************
-
 ip_normalized_t
-torch_monitor_op_placeholder_ip
+static torch_monitor_op_placeholder_ip
 (
  torch_monitor_op_placeholder_type_t type
 )
@@ -121,56 +78,16 @@ torch_monitor_op_placeholder_ip
   abort();
 }
 
+//******************************************************************************
+// interface operations
+//******************************************************************************
 
 cct_node_t *
-torch_monitor_op_ccts_get
-(
- torch_monitor_op_ccts_t *torch_monitor_op_ccts,
- torch_monitor_op_placeholder_type_t type
-)
-{
-  return torch_monitor_op_ccts->ccts[type];
-}
-
-
-void
-torch_monitor_op_ccts_insert
+torch_monitor_op_cct_insert
 (
  cct_node_t *api_node,
- torch_monitor_op_ccts_t *torch_monitor_op_ccts,
- torch_monitor_op_placeholder_flags_t flags
-)
-{
-  int i;
-  for (i = 0; i < torch_monitor_op_placeholder_type_count; i++) {
-    cct_node_t *node = NULL;
-
-    if (flags & (1 << i)) {
-      node = hpcrun_cct_insert_ip_norm(api_node, torch_monitor_op_placeholder_ip(i), true);
-    }
-
-    torch_monitor_op_ccts->ccts[i] = node;
-  }
-}
-
-
-void
-torch_monitor_op_placeholder_flags_set
-(
- torch_monitor_op_placeholder_flags_t *flags,
  torch_monitor_op_placeholder_type_t type
 )
 {
-  *flags |= (1 << type);
-}
-
-
-bool
-torch_monitor_op_placeholder_flags_is_set
-(
- torch_monitor_op_placeholder_flags_t flags,
- torch_monitor_op_placeholder_type_t type
-)
-{
-  return (flags & (1 << type)) ? true : false;
+  return hpcrun_cct_insert_ip_norm(api_node, torch_monitor_op_placeholder_ip(type), true);
 }
