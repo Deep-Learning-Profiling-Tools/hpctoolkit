@@ -148,7 +148,7 @@ static size_t string_hash(const char* data) {
       uint64_t: UINT64_C(0x00000100000001b3));
   size_t i;
   for(i = 0; i < sz; i += sizeof sponge) {
-    sponge ^= *(size_t*)&data[i];
+    sponge ^= (size_t)(data[i]);
     sponge *= prime;
   }
   i -= sizeof sponge;
@@ -207,7 +207,7 @@ static void hashtable_grow(logical_metadata_store_t* store) {
       *e = oldtable[i];
     }
   }
-  // free(oldtable);  // hpcrun_malloc memory isn't freeable
+  // free(oldtable);  // XXX(Keren): hpcrun_malloc memory isn't freeable
 }
 
 uint32_t hpcrun_logical_metadata_fid(logical_metadata_store_t* store,
@@ -269,6 +269,7 @@ void hpcrun_logical_metadata_cleanup(logical_metadata_store_t* store) {
     hpcfmt_str_fwrite(entry->funcname, f);
     hpcfmt_str_fwrite(entry->filename, f);
     hpcfmt_int4_fwrite(entry->lineno, f);
+    TMSG(TORCH_MONITOR, "Write id: %u funcname: %s filename: %s lineno: %u", entry->id, entry->funcname, entry->filename, entry->lineno);
   }
   fclose(f);
 }
