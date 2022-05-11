@@ -51,10 +51,15 @@ forward_cct_get
   int zero_metric_id = 0;  // nothing to see here
 
   hpcrun_safe_enter(); 
-  cct_node_t *cct = hpcrun_sample_callpath(NULL, zero_metric_id, zero_metric_incr, 0, 1, NULL).sample_node;
+
+  ucontext_t uc;
+  getcontext(&uc); // current context, where unwind will begin 
+
+  cct_node_t *cct = hpcrun_sample_callpath(&uc, zero_metric_id, zero_metric_incr, 0, 1, NULL).sample_node;
   if (function_name != NULL) {
     cct = torch_monitor_backtrace_function_insert(cct, function_name);
   }
+
   hpcrun_safe_exit();
 
   return cct;
