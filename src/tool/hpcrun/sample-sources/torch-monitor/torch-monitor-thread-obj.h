@@ -15,6 +15,8 @@ typedef struct torch_monitor_thread_obj {
   size_t python_cur_num_states;
   torch_monitor_python_state_t *python_states;
 
+  ip_normalized_t function_ip_norm;
+  cct_node_t *forward_cct;
   cct_node_t *prev_cct;
 } torch_monitor_thread_obj_t;
 

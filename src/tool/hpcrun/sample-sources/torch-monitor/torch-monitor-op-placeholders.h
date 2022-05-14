@@ -79,4 +79,10 @@ torch_monitor_op_cct_insert
 );
 
 
+ip_normalized_t
+torch_monitor_op_placeholder_ip
+(
+ torch_monitor_op_placeholder_type_t type
+);
+
 #endif

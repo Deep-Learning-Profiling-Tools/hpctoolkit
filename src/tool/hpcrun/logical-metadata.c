@@ -63,46 +63,7 @@ typedef struct logical_metadata_store {
 // Pointer to the head of metadata storage
 static logical_metadata_store_t *metadata;
 
-void hpcrun_logical_metadata_register(logical_metadata_store_t **store, const char* generator) {
-  if (*store == NULL) {
-    *store = hpcrun_malloc_safe(sizeof(logical_metadata_store_t));
-  }
-
-  spinlock_init(&(*store)->lock);
-  (*store)->nextid = 1;  // 0 is reserved for the logical unknown
-  (*store)->idtable = NULL;
-  (*store)->tablesize = 0;
-  (*store)->generator = strdup(generator);
-  atomic_init(&(*store)->lm_id, 0);
-  (*store)->path = NULL;
-  (*store)->next = metadata;
-  metadata = (*store);
-}
-
-ip_normalized_t hpcrun_logical_metadata_ipnorm(
-    logical_metadata_store_t* store, uint32_t fid, uint32_t lineno) {
-  ip_normalized_t ip = {
-    .lm_id = hpcrun_logical_metadata_lmid(store), .lm_ip = fid,
-  };
-  ip.lm_ip = (ip.lm_ip << 32) + lineno;
-  return ip;
-}
-
-uint16_t hpcrun_logical_metadata_lmid(logical_metadata_store_t* store) {
-  uint16_t ret = atomic_load_explicit(&store->lm_id, memory_order_relaxed);
-  if(ret == 0) {
-    spinlock_lock(&store->lock);
-    ret = atomic_load_explicit(&store->lm_id, memory_order_relaxed);
-    if(ret == 0) {
-      hpcrun_logical_metadata_generate_lmid(store);
-      ret = atomic_load_explicit(&store->lm_id, memory_order_relaxed);
-    }
-    spinlock_unlock(&store->lock);
-  }
-  return ret;
-}
-
-void hpcrun_logical_metadata_generate_lmid(logical_metadata_store_t* store) {
+static void store_path_init(logical_metadata_store_t* store) {
   // Storage for the path we will be generating
   // <output dir> + /logical/ + <generator> + . + <8 random hex digits> + \0
   store->path = hpcrun_malloc_safe(strlen(hpcrun_files_output_directory())
@@ -134,6 +95,52 @@ void hpcrun_logical_metadata_generate_lmid(logical_metadata_store_t* store) {
   } while(1);
   close(fd);
 
+}
+
+
+void hpcrun_logical_metadata_register(logical_metadata_store_t **store, const char* generator) {
+  if (*store == NULL) {
+    *store = hpcrun_malloc_safe(sizeof(logical_metadata_store_t));
+  }
+
+  spinlock_init(&(*store)->lock);
+  (*store)->nextid = 1;  // 0 is reserved for the logical unknown
+  (*store)->idtable = NULL;
+  (*store)->tablesize = 0;
+  (*store)->generator = strdup(generator);
+  atomic_init(&(*store)->lm_id, 0);
+  store_path_init(*store);
+  (*store)->next = metadata;
+  metadata = (*store);
+}
+
+ip_normalized_t hpcrun_logical_metadata_ipnorm(
+    logical_metadata_store_t* store, uint32_t fid, uint32_t lineno) {
+  ip_normalized_t ip = {
+    .lm_id = hpcrun_logical_metadata_lmid(store), .lm_ip = fid,
+  };
+  ip.lm_ip = (ip.lm_ip << 32) + lineno;
+  return ip;
+}
+
+uint16_t hpcrun_logical_metadata_lmid(logical_metadata_store_t* store) {
+  uint16_t ret = atomic_load_explicit(&store->lm_id, memory_order_relaxed);
+  if(ret == 0) {
+    spinlock_lock(&store->lock);
+    ret = atomic_load_explicit(&store->lm_id, memory_order_relaxed);
+    if(ret == 0) {
+      hpcrun_logical_metadata_generate_lmid(store);
+      ret = atomic_load_explicit(&store->lm_id, memory_order_relaxed);
+    }
+    spinlock_unlock(&store->lock);
+  }
+  return ret;
+}
+
+void hpcrun_logical_metadata_generate_lmid(logical_metadata_store_t* store) {
+  if (store->path == NULL) {
+    store_path_init(store);
+  }
   // Register the path with the loadmap
   atomic_store_explicit(&store->lm_id, hpcrun_loadModule_add(store->path), memory_order_release);
 }

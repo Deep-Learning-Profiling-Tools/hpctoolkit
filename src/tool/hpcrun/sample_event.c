@@ -286,7 +286,7 @@ hpcrun_sample_callpath(void* context, int metricId,
         data_aux = data->sample_data;
 
 #ifdef TORCH_MONITOR_ENABLE
-      if (torch_monitor_status() && !torch_monitor_native_stack_status()) {
+      if (torch_monitor_status_get() && !torch_monitor_native_stack_status_get()) {
         TMSG(TORCH_MONITOR, "torch_monitor backtrace2cct invoked");
         node = torch_monitor_backtrace2cct(&(epoch->csdata), metricId, metricIncr);
       } else {
@@ -317,7 +317,7 @@ hpcrun_sample_callpath(void* context, int metricId,
   else {  // Partial unwind case
     cct_bundle_t* cct = &(td->core_profile_trace_data.epoch->csdata);
 #ifdef TORCH_MONITOR_ENABLE
-    if (torch_monitor_status() && !torch_monitor_native_stack_status()) {
+    if (torch_monitor_status_get() && !torch_monitor_native_stack_status_get()) {
       TMSG(TORCH_MONITOR, "torch_monitor backtrace2cct invoked");
       node = torch_monitor_backtrace2cct(cct, metricId, metricIncr);
     } else {

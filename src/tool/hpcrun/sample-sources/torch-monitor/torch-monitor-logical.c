@@ -10,6 +10,7 @@
 #include <torch_monitor.h>
 
 #include "torch-monitor-thread-obj.h"
+#include "torch-monitor-op-placeholders.h"
 
 #define TORCH_MONITOR_MODULE_ID_NULL -1
 
@@ -17,23 +18,100 @@ static bool torch_monitor_native_stack_enabled = false;
 
 static logical_metadata_store_t *torch_monitor_metadata = NULL;
 
-bool torch_monitor_native_stack_status() {
+static __thread int python_module_id = TORCH_MONITOR_MODULE_ID_NULL;
+
+
+bool torch_monitor_native_stack_status_get() {
   return torch_monitor_native_stack_enabled;
 }
 
 
-cct_node_t *
-torch_monitor_backtrace_function_insert
+int torch_monitor_python_module_id_get() {
+  // Assuming python is not loaded and unloaded
+  return python_module_id;
+}
+
+
+ip_normalized_t
+torch_monitor_function_ip
 (
- cct_node_t *cct,
  const char *function_name
 )
 {
-
   const char *metadata_path = hpcrun_logical_metadata_path_get(torch_monitor_metadata);
   uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata, function_name, metadata_path, 0);
   ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata, fid, 0);
-  return hpcrun_cct_insert_ip_norm(cct, ip_norm, true);
+
+  TMSG(TORCH_MONITOR, "function name %s metapath %s", function_name, metadata_path);
+
+  return ip_norm;
+}
+
+
+static cct_node_t *
+backtrace_phase_insert
+(
+ torch_monitor_thread_obj_t *thread_obj,
+ cct_node_t *cct
+)
+{
+  if (thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_FORWARD) {
+    cct = torch_monitor_op_cct_insert(cct, torch_monitor_op_placeholder_type_forward);
+  } else if (thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_BACKWARD) {
+    cct = torch_monitor_op_cct_insert(cct, torch_monitor_op_placeholder_type_backward);
+  }
+
+  return cct;
+}
+
+
+static cct_node_t *
+backtrace_function_insert
+(
+ torch_monitor_thread_obj_t *thread_obj,
+ cct_node_t *cct
+)
+{
+  cct = hpcrun_cct_insert_ip_norm(cct, thread_obj->function_ip_norm, true);
+  cct = backtrace_phase_insert(thread_obj, cct);
+
+  return cct;
+}
+
+
+static void
+python_callpath_unwind
+(
+ torch_monitor_thread_obj_t *thread_obj,
+ frame_t **btbuf_cur,
+ bool expand  // If the backtrace buffer should be expanded
+)
+{
+  TMSG(TORCH_MONITOR, "Frame start ==================================================");
+
+  torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
+    &thread_obj->python_cur_num_states);
+
+  int i;
+  for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
+    if (expand) {
+      hpcrun_ensure_btbuf_avail();
+    }
+
+    torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
+    uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata, python_state->function_name,
+      python_state->file_name, python_state->function_first_lineno);
+    ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
+      fid, python_state->lineno);
+
+    TMSG(TORCH_MONITOR, "file name %s function name %s->ip norm %u %p",
+      python_state->file_name, python_state->function_name, ip_norm.lm_id, ip_norm.lm_ip);
+
+    (*btbuf_cur)->ip_norm = ip_norm;
+    (*btbuf_cur)++;
+  }
+
+  TMSG(TORCH_MONITOR, "Frame end ==================================================");
 }
 
 
@@ -45,7 +123,7 @@ torch_monitor_backtrace2cct
  hpcrun_metricVal_t metric_incr
 )
 {
-  hpcrun_safe_enter();
+  TMSG(TORCH_MONITOR, "Enter torch_monitor_backtrace2cct");
 
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
   cct_node_t *node = NULL;
@@ -53,7 +131,7 @@ torch_monitor_backtrace2cct
   if (thread_obj->prev_cct != NULL) {
     TMSG(TORCH_MONITOR, "Fast path backtrace2cct");
 
-    // If this op happens between op_enter and op_exit, we used cached cct node
+    // If this op happens between op_enter and op_exit, we use cached cct node
     node = thread_obj->prev_cct;
     metric_data_list_t *metric_set = hpcrun_reify_metric_set(node, metric_id);
     metric_upd_proc_t *upd_proc = hpcrun_get_metric_proc(metric_id);
@@ -61,45 +139,65 @@ torch_monitor_backtrace2cct
       upd_proc(metric_id, metric_set, metric_incr);
     }
   } else {
-    TMSG(TORCH_MONITOR, "Slow path backtrace2cct");
+    if (thread_obj->forward_cct != NULL) {
+      TMSG(TORCH_MONITOR, "Concatenate forward path backtrace2cct");
 
-    // Otherwise, we unwind python call path
-    cct_node_t* cct_cursor = cct->tree_root;
-    torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
-      &thread_obj->python_cur_num_states);
+      node = backtrace_phase_insert(thread_obj, thread_obj->forward_cct);
+    } else {
+      TMSG(TORCH_MONITOR, "Slow path backtrace2cct");
 
-    thread_data_t* td = hpcrun_get_thread_data();
+      // Otherwise, we unwind python call path
+      thread_data_t* td = hpcrun_get_thread_data();
 
-    td->btbuf_cur = td->btbuf_beg;  // innermost
-    td->btbuf_sav = td->btbuf_end;  // what is it? is it needed?
+      td->btbuf_cur = td->btbuf_beg;  // innermost
+      td->btbuf_sav = td->btbuf_end;  // FIXME: is it needed?
 
-    TMSG(TORCH_MONITOR, "Frame start ==================================================");
+      python_callpath_unwind(thread_obj, &(td->btbuf_cur), true);
 
-    int i;
-    for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
-      hpcrun_ensure_btbuf_avail();
+      frame_t* bt_beg = td->btbuf_beg;      // innermost, inclusive 
+      frame_t* bt_end = td->btbuf_cur - 1;  // outermost, inclusive
 
-      torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
-      uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata,
-        python_state->function_name, python_state->file_name, python_state->function_first_lineno);
-      ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
-        fid, python_state->lineno);
-
-      td->btbuf_cur->ip_norm = ip_norm;
-      td->btbuf_cur++;
+      cct_node_t* cct_cursor = cct->tree_root;
+      node = hpcrun_cct_insert_backtrace_w_metric(cct_cursor, metric_id, bt_end, bt_beg, metric_incr, NULL);
+      // Insert both funtion and phase nodes
+      node = backtrace_function_insert(thread_obj, node);
     }
-
-    TMSG(TORCH_MONITOR, "Frame end ==================================================");
-
-    frame_t* bt_beg = td->btbuf_beg;      // innermost, inclusive 
-    frame_t* bt_end = td->btbuf_cur - 1;  // outermost, inclusive
-
-    node = hpcrun_cct_insert_backtrace_w_metric(cct_cursor, metric_id, bt_end, bt_beg, metric_incr, NULL);
+    
+    // Cache prev_node in any case
+    thread_obj->prev_cct = node;
   }
 
-  hpcrun_safe_exit();
+  TMSG(TORCH_MONITOR, "Exit torch_monitor_backtrace2cct");
 
   return node;
+}
+
+
+static frame_t *
+python_start_frame_get
+(
+ backtrace_info_t* bt
+)
+{
+  // bottom frames ... top frames
+  // bt->begin (inclusive) ... bt->last (inclusive)
+  // Assuming the call stack has python interpreters on the top
+  frame_t *btbuf_cur = bt->begin;  // Inclusive
+  while (btbuf_cur != bt->last) {
+    uint16_t lm_id = btbuf_cur->ip_norm.lm_id;
+
+    if (python_module_id == TORCH_MONITOR_MODULE_ID_NULL) {
+      load_module_t *module = hpcrun_loadmap_findById(lm_id);
+      if (module != NULL && strstr(module->name, "/bin/python") != NULL) {
+        python_module_id = lm_id;
+      }
+    }
+    if (lm_id == python_module_id) {
+      break;
+    }
+    btbuf_cur++;
+  }
+  return btbuf_cur;
 }
 
 
@@ -110,68 +208,84 @@ backtrace_finalize
  int is_sync
 )
 {
-  //if (thread_obj->prev_cct != NULL) {
-  //  // Ignore backward paths for now
-  //} else {
-    static __thread int python_id = TORCH_MONITOR_MODULE_ID_NULL;
+  // btbuf_cur is the start of raw python frames
+  frame_t *btbuf_cur = python_start_frame_get(bt);
 
-    // bottom frames ... top frames
-    // bt->begin (inclusive) ... bt->last (inclusive)
-    frame_t *bt_cur = bt->begin;  // Inclusive
+  torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
+  if (thread_obj->prev_cct != NULL) {
+    TMSG(TORCH_MONITOR, "Fast path backtrace_finalize");
 
-    // Assuming the call stack has python interpreters on the top
-    while (bt_cur != bt->last) {
-      uint16_t lm_id = bt_cur->ip_norm.lm_id;
-
-      if (python_id == TORCH_MONITOR_MODULE_ID_NULL) {
-        load_module_t *module = hpcrun_loadmap_findById(lm_id);
-        if (module != NULL && strstr(module->name, "/bin/python") != NULL) {
-          python_id = lm_id;
-        }
-      }
-
-      if (lm_id == python_id) {
-        break;
-      }
-      bt_cur++;
-    }
-
-    // Always slow path
-    // TODO(Keren): replace call stack above bt_cur
-    // TODO(Keren): cache python call path
-    torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
-    torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
-      &thread_obj->python_cur_num_states);
+    // Python path is cached we can just adjust frame begin and last
+    // btbuf_cur is a raw python frame
+    bt->last = btbuf_cur - 1;  // Inclusive
+  } else {
+    TMSG(TORCH_MONITOR, "Slow path backtrace_finalize");
     // Has python frames but python module is not found
-    assert(!(python_id == TORCH_MONITOR_MODULE_ID_NULL && thread_obj->python_cur_num_states != 0));
+    assert(!(python_module_id == TORCH_MONITOR_MODULE_ID_NULL && thread_obj->python_cur_num_states != 0));
 
     size_t raw_frames = bt->last - bt->begin + 1;
-    size_t raw_python_frames = bt->last - bt_cur;  // bt_cur is a native frame
+    size_t raw_python_frames = bt->last - btbuf_cur;  // btbuf_cur is a native frame
     size_t processed_python_frames = thread_obj->python_cur_num_states;
-    size_t processed_native_frames = bt_cur - bt->begin + 1;
+    size_t processed_native_frames = btbuf_cur - bt->begin + 1;
     size_t processed_total_frames = processed_native_frames + processed_python_frames;
 
     TMSG(TORCH_MONITOR, "raw_frames: %lu, raw_python_frames: %lu, processed_python_frames: %lu processed_native_frames: %lu, processed_total_frames: %lu\n", raw_frames, raw_python_frames, processed_python_frames, processed_native_frames, processed_total_frames);
 
-    thread_data_t* td = hpcrun_get_thread_data();
-    // bt_cur is a raw python frame
-    td->btbuf_cur = bt_cur;
+    if (thread_obj->forward_cct == NULL) {
+      assert((thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_FORWARD));
+      // else forward
+      // nested level = 0
+      // native ...     / python ...
+      // bt->begin ... btbuf_cur ... bt->last
+      
+      // forward node
+      hpcrun_ensure_btbuf_avail();
+      btbuf_cur->ip_norm = torch_monitor_op_placeholder_ip(torch_monitor_op_placeholder_type_forward);
+      btbuf_cur++;
 
-    int i;
-    for (i = 0; i < processed_python_frames; ++i) {
-      torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
-      uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata,
-        python_state->function_name, python_state->file_name, python_state->function_first_lineno);
-      ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
-        fid, python_state->lineno);
+      // function node
+      hpcrun_ensure_btbuf_avail();
+      btbuf_cur->ip_norm = thread_obj->function_ip_norm;
+      btbuf_cur++;
 
-      td->btbuf_cur->ip_norm = ip_norm;
-      td->btbuf_cur++;
+      python_callpath_unwind(thread_obj, &btbuf_cur, false);
+
+      // Move native buf to the end
+      bt->last = btbuf_cur + processed_python_frames - 1;
+    } else {
+      // Only unwind native frames
+      bt->last = bt->begin + processed_native_frames - 1;
     }
+  }
+}
 
-    // move native buf to the end
-    bt->last = bt_cur + processed_python_frames - 1;
-  //}
+
+static cct_node_t *
+cct_finalize
+(
+ cct_bundle_t *cct, // original cct
+ backtrace_info_t *bt,
+ cct_node_t *cursor // refined cct by runtime
+)
+{
+  torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
+
+  if (thread_obj->forward_cct != NULL) {
+    if (thread_obj->prev_cct == NULL) {
+      // backward
+      // nested level = 0, update cached CCT
+      cursor = backtrace_phase_insert(thread_obj, thread_obj->forward_cct);
+      thread_obj->prev_cct = cursor;
+    } else {
+      // forward or backward
+      // nested level != 0, use cached CCT
+      cursor = thread_obj->prev_cct;
+    }
+  }
+  // else forward
+  // nested level = 0
+
+  return cursor;
 }
 
 
@@ -181,6 +295,8 @@ torch_monitor_logical_register
  bool native_stack
 )
 {
+  TMSG(TORCH_MONITOR, "Enter torch_monitor_logical_register");
+
   torch_monitor_native_stack_enabled = native_stack;
   hpcrun_logical_metadata_register(&torch_monitor_metadata, "torch_monitor");
 
@@ -189,10 +305,14 @@ torch_monitor_logical_register
     static bool torch_monitor_backtrace_registered = false;
     if(!torch_monitor_backtrace_registered) {
       cct_backtrace_finalize_register(&backtrace_entry);
+      cct_cursor_finalize_register(cct_finalize);
       torch_monitor_backtrace_registered = true;
     }
   }
+
+  TMSG(TORCH_MONITOR, "Exit torch_monitor_logical_register");
 }
+
 
 void
 torch_monitor_logical_unregister
@@ -200,6 +320,10 @@ torch_monitor_logical_unregister
  void
 )
 {
+  TMSG(TORCH_MONITOR, "Enter torch_monitor_logical_unregister");
+
   torch_monitor_native_stack_enabled = false;
   hpcrun_logical_metadata_cleanup(torch_monitor_metadata);
+
+  TMSG(TORCH_MONITOR, "Exit torch_monitor_logical_unregister");
 }

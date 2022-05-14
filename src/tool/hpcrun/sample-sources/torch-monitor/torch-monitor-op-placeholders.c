@@ -61,7 +61,7 @@
 #include "torch-monitor-op-placeholders.h"
 
 ip_normalized_t
-static torch_monitor_op_placeholder_ip
+torch_monitor_op_placeholder_ip
 (
  torch_monitor_op_placeholder_type_t type
 )

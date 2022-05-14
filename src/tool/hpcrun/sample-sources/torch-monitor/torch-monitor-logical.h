@@ -7,7 +7,9 @@
 #include <hpcrun/metrics.h>
 #include <hpcrun/thread_data.h>
 
-bool torch_monitor_native_stack_status();
+bool torch_monitor_native_stack_status_get();
+
+int torch_monitor_python_module_id_get();
 
 void
 torch_monitor_logical_register
@@ -21,10 +23,9 @@ torch_monitor_logical_unregister
  void
 );
 
-cct_node_t *
-torch_monitor_backtrace_function_insert
+ip_normalized_t
+torch_monitor_function_ip
 (
- cct_node_t *cct,
  const char *function_name
 );
 

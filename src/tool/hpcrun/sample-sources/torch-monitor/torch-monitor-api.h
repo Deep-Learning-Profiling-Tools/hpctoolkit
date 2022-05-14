@@ -7,6 +7,6 @@ void torch_monitor_start(bool native_stack);
 
 void torch_monitor_stop();
 
-bool torch_monitor_status();
+bool torch_monitor_status_get();
 
 #endif  // torch_monitor_api_h

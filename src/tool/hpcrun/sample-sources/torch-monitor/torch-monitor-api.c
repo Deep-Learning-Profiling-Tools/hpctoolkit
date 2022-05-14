@@ -28,7 +28,7 @@
 static bool torch_monitor_enabled = false;
 
 bool
-torch_monitor_status
+torch_monitor_status_get
 (
  void
 )
@@ -40,13 +40,9 @@ torch_monitor_status
 static cct_node_t *
 forward_cct_get
 (
- const char *function_name,
  torch_monitor_thread_obj_t *thread_obj
 )
 {
-  torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
-    &thread_obj->python_cur_num_states);
-
   hpcrun_metricVal_t zero_metric_incr = {.i = 0};
   int zero_metric_id = 0;  // nothing to see here
 
@@ -56,9 +52,6 @@ forward_cct_get
   getcontext(&uc); // current context, where unwind will begin 
 
   cct_node_t *cct = hpcrun_sample_callpath(&uc, zero_metric_id, zero_metric_incr, 0, 1, NULL).sample_node;
-  if (function_name != NULL) {
-    cct = torch_monitor_backtrace_function_insert(cct, function_name);
-  }
 
   hpcrun_safe_exit();
 
@@ -66,14 +59,24 @@ forward_cct_get
 }
 
 
-static void
-forward_prev_cct_update
+static cct_node_t *
+forward_cct_lookup
 (
- cct_node_t *cct,
- torch_monitor_thread_obj_t *thread_obj
+ torch_monitor_thread_obj_t *thread_obj,
+ cct_node_t *cct
 )
 {
-  thread_obj->prev_cct = torch_monitor_op_cct_insert(cct, torch_monitor_op_placeholder_type_forward);
+  // Upward until find the forward cct node
+  while (cct != NULL) {
+    cct_addr_t *addr = hpcrun_cct_addr(cct);
+    ip_normalized_t forward_ip_norm = torch_monitor_op_placeholder_ip(torch_monitor_op_placeholder_type_forward);
+    if (addr->ip_norm.lm_id == forward_ip_norm.lm_id && addr->ip_norm.lm_ip == forward_ip_norm.lm_ip) {
+      break;
+    }
+    cct = hpcrun_cct_parent(cct);
+  }
+  assert(cct != NULL);
+  return hpcrun_cct_parent(cct);
 }
 
 
@@ -88,10 +91,10 @@ forward_function_callback
   int64_t sequence_number = callback_data->data.op_data.sequence_number;
   uint32_t nested_level = callback_data->data.op_data.nested_level;
   const char *function_name = callback_data->data.op_data.name;
- 
+
   thread_obj->thread_state |= TORCH_MONITOR_THREAD_STATE_FORWARD;
 
-  TMSG(TORCH_MONITOR, "Enter forward level %u state %p", nested_level, thread_obj->thread_state);
+  TMSG(TORCH_MONITOR, "Enter forward level %u state %p function %s", nested_level, thread_obj->thread_state, function_name);
 
   if (sequence_number == -1 || nested_level != 0) {
     // sequence_number == -1: This op may not have a corresponding backward call
@@ -99,8 +102,10 @@ forward_function_callback
     return;
   }
 
-  cct_node_t *cct = forward_cct_get(function_name, thread_obj);
-  forward_prev_cct_update(cct, thread_obj);
+  // Save function ip_norm so future unwinding can use ip_norm to add a function node
+  thread_obj->function_ip_norm = torch_monitor_function_ip(function_name);
+  cct_node_t *cct = forward_cct_get(thread_obj);
+  cct = forward_cct_lookup(thread_obj, cct);
 
   // A node in a computation graph can be without backward operations.
   // In this case, the <forward_thread_id, sequence_number> pair could repeat,
@@ -124,16 +129,15 @@ forward_function_callback
 
 
 static void
-backward_prev_cct_update
+backward_forward_cct_update
 (
  cct_node_t *cct,
  torch_monitor_thread_obj_t *thread_obj
 )
 {
   thread_data_t* td = hpcrun_get_thread_data();
-  cct = hpcrun_cct_insert_path_return_leaf(td->core_profile_trace_data.epoch->csdata.tree_root, cct);
-  cct = torch_monitor_op_cct_insert(cct, torch_monitor_op_placeholder_type_backward);
-  thread_obj->prev_cct = cct;
+  thread_obj->forward_cct = hpcrun_cct_insert_path_return_leaf(
+    td->core_profile_trace_data.epoch->csdata.tree_root, cct);
 }
 
 
@@ -167,7 +171,7 @@ backward_function_callback
     TMSG(TORCH_MONITOR, "Lookup forward_thread_id %lu sequence_number %ld", forward_thread_id, sequence_number);
     cct_node_t *cct = torch_monitor_forward_cct_map_entry_cct_get(entry);
     assert(cct != NULL);
-    backward_prev_cct_update(cct, thread_obj);
+    backward_forward_cct_update(cct, thread_obj);
   }
 }
 
@@ -182,6 +186,7 @@ forward_cleanup_callback
   uint32_t nested_level = callback_data->data.op_data.nested_level;
 
   if ((thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_BACKWARD) == 0 && nested_level == 0) {
+    thread_obj->forward_cct = NULL;
     thread_obj->prev_cct = NULL;
   }
 
@@ -198,9 +203,12 @@ backward_cleanup_callback
 {
   uint32_t nested_level = callback_data->data.op_data.nested_level;
 
-  // thread_obj->prev_cct = NULL;
-  // The backward compute function is invoked after the exit.
-  // So don't clean up this cct
+  if (nested_level == 0) {
+    thread_obj->forward_cct = NULL;
+    // thread_obj->prev_cct = NULL;
+    // The backward compute function is invoked after the exit.
+    // So don't clean up this cct
+  }
 
   TMSG(TORCH_MONITOR, "Exit backward level %u state %p", nested_level, thread_obj->thread_state);
 }
@@ -213,6 +221,8 @@ torch_monitor_callback
  torch_monitor_callback_data_t *callback_data
 )
 {
+  TMSG(TORCH_MONITOR, "Enter torch_monitor_callback");
+
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
 
   if (callback_site == TORCH_MONITOR_CALLBACK_ENTER) {
@@ -231,6 +241,8 @@ torch_monitor_callback
       backward_cleanup_callback(callback_data, thread_obj);
     }
   }
+
+  TMSG(TORCH_MONITOR, "Exit torch_monitor_callback");
 }
 
 
@@ -240,6 +252,8 @@ torch_monitor_start
  bool native_stack
 )
 {
+  TMSG(TORCH_MONITOR, "Enter torch_monitor_start");
+
   torch_monitor_enabled = true;
 
   torch_monitor_logical_register(native_stack);
@@ -248,6 +262,8 @@ torch_monitor_start
   TORCH_MONITOR_CALL(torch_monitor_domain_enable, (TORCH_MONITOR_DOMAIN_BACKWARD_FUNCTION));
   TORCH_MONITOR_CALL(torch_monitor_callback_subscribe, (torch_monitor_callback));
   TORCH_MONITOR_CALL(torch_monitor_init, ());
+
+  TMSG(TORCH_MONITOR, "Exit torch_monitor_start");
 }
 
 
@@ -257,10 +273,14 @@ torch_monitor_stop
  void
 )
 {
+  TMSG(TORCH_MONITOR, "Enter torch_monitor_start");
+
   torch_monitor_enabled = false;
 
   torch_monitor_logical_unregister();
 
   TORCH_MONITOR_CALL(torch_monitor_finalize, ());
+
+  TMSG(TORCH_MONITOR, "Exit torch_monitor_stop");
 }
 
