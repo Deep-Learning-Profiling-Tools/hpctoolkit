@@ -38,29 +38,7 @@ torch_monitor_status_get
 
 
 static cct_node_t *
-forward_cct_get
-(
- torch_monitor_thread_obj_t *thread_obj
-)
-{
-  hpcrun_metricVal_t zero_metric_incr = {.i = 0};
-  int zero_metric_id = 0;  // nothing to see here
-
-  hpcrun_safe_enter(); 
-
-  ucontext_t uc;
-  getcontext(&uc); // current context, where unwind will begin 
-
-  cct_node_t *cct = hpcrun_sample_callpath(&uc, zero_metric_id, zero_metric_incr, 0, 1, NULL).sample_node;
-
-  hpcrun_safe_exit();
-
-  return cct;
-}
-
-
-static cct_node_t *
-forward_cct_lookup
+forward_function_cct_lookup
 (
  torch_monitor_thread_obj_t *thread_obj,
  cct_node_t *cct
@@ -77,6 +55,43 @@ forward_cct_lookup
   }
   assert(cct != NULL);
   return hpcrun_cct_parent(cct);
+}
+
+
+static cct_node_t *
+forward_function_cct_get
+(
+ torch_monitor_thread_obj_t *thread_obj
+)
+{
+  hpcrun_metricVal_t zero_metric_incr = {.i = 0};
+  int zero_metric_id = 0;  // nothing to see here
+
+  hpcrun_safe_enter(); 
+
+  ucontext_t uc;
+  getcontext(&uc); // current context, where unwind will begin 
+
+  cct_node_t *cct = hpcrun_sample_callpath(&uc, zero_metric_id, zero_metric_incr, 0, 1, NULL).sample_node;
+
+  hpcrun_safe_exit();
+
+  cct = forward_function_cct_lookup(thread_obj, cct);
+
+  return cct;
+}
+
+
+
+static void
+cached_cct_cleanup
+(
+ torch_monitor_thread_obj_t *thread_obj
+)
+{
+  thread_obj->prev_cct = NULL;
+
+  TMSG(TORCH_MONITOR, "Cleanup prev_cct");
 }
 
 
@@ -102,10 +117,14 @@ forward_function_callback
     return;
   }
 
+  cached_cct_cleanup(thread_obj);
+
+  // Sebsequent calls are forward functions
+  thread_obj->domain = TORCH_MONITOR_DOMAIN_FUNCTION;
   // Save function ip_norm so future unwinding can use ip_norm to add a function node
   thread_obj->function_ip_norm = torch_monitor_function_ip(function_name);
-  cct_node_t *cct = forward_cct_get(thread_obj);
-  cct = forward_cct_lookup(thread_obj, cct);
+  // Get the function cct
+  cct_node_t *cct = forward_function_cct_get(thread_obj);
 
   // A node in a computation graph can be without backward operations.
   // In this case, the <forward_thread_id, sequence_number> pair could repeat,
@@ -129,14 +148,14 @@ forward_function_callback
 
 
 static void
-backward_forward_cct_update
+backward_function_cct_update
 (
  cct_node_t *cct,
  torch_monitor_thread_obj_t *thread_obj
 )
 {
   thread_data_t* td = hpcrun_get_thread_data();
-  thread_obj->forward_cct = hpcrun_cct_insert_path_return_leaf(
+  thread_obj->function_cct = hpcrun_cct_insert_path_return_leaf(
     td->core_profile_trace_data.epoch->csdata.tree_root, cct);
 }
 
@@ -161,6 +180,11 @@ backward_function_callback
     return;
   }
 
+  cached_cct_cleanup(thread_obj);
+
+  // Overwrite forward domain, even upcoming forward calls are in the backward domain
+  thread_obj->domain = TORCH_MONITOR_DOMAIN_BACKWARD_FUNCTION;
+
   forward_key_t key = {
     .forward_thread_id = forward_thread_id,
     .sequence_number = sequence_number
@@ -171,7 +195,7 @@ backward_function_callback
     TMSG(TORCH_MONITOR, "Lookup forward_thread_id %lu sequence_number %ld", forward_thread_id, sequence_number);
     cct_node_t *cct = torch_monitor_forward_cct_map_entry_cct_get(entry);
     assert(cct != NULL);
-    backward_forward_cct_update(cct, thread_obj);
+    backward_function_cct_update(cct, thread_obj);
   }
 }
 
@@ -185,11 +209,6 @@ forward_cleanup_callback
 {
   uint32_t nested_level = callback_data->data.op_data.nested_level;
 
-  if ((thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_BACKWARD) == 0 && nested_level == 0) {
-    thread_obj->forward_cct = NULL;
-    thread_obj->prev_cct = NULL;
-  }
-
   TMSG(TORCH_MONITOR, "Exit forward level %u state %p", nested_level, thread_obj->thread_state);
 }
 
@@ -202,13 +221,6 @@ backward_cleanup_callback
 )
 {
   uint32_t nested_level = callback_data->data.op_data.nested_level;
-
-  if (nested_level == 0) {
-    thread_obj->forward_cct = NULL;
-    // thread_obj->prev_cct = NULL;
-    // The backward compute function is invoked after the exit.
-    // So don't clean up this cct
-  }
 
   TMSG(TORCH_MONITOR, "Exit backward level %u state %p", nested_level, thread_obj->thread_state);
 }

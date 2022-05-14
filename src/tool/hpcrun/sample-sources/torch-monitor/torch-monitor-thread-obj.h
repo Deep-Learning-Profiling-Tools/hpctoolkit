@@ -9,6 +9,7 @@
 
 typedef struct torch_monitor_thread_obj {
   torch_monitor_thread_state_t thread_state;
+  torch_monitor_domain_t domain;
 
   bool python_states_cached;
   size_t python_max_num_states;
@@ -16,7 +17,7 @@ typedef struct torch_monitor_thread_obj {
   torch_monitor_python_state_t *python_states;
 
   ip_normalized_t function_ip_norm;
-  cct_node_t *forward_cct;
+  cct_node_t *function_cct;
   cct_node_t *prev_cct;
 } torch_monitor_thread_obj_t;
 

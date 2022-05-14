@@ -55,9 +55,9 @@ backtrace_phase_insert
  cct_node_t *cct
 )
 {
-  if (thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_FORWARD) {
+  if (thread_obj->domain == TORCH_MONITOR_DOMAIN_FUNCTION) {
     cct = torch_monitor_op_cct_insert(cct, torch_monitor_op_placeholder_type_forward);
-  } else if (thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_BACKWARD) {
+  } else if (thread_obj->domain == TORCH_MONITOR_DOMAIN_BACKWARD_FUNCTION) {
     cct = torch_monitor_op_cct_insert(cct, torch_monitor_op_placeholder_type_backward);
   }
 
@@ -139,10 +139,10 @@ torch_monitor_backtrace2cct
       upd_proc(metric_id, metric_set, metric_incr);
     }
   } else {
-    if (thread_obj->forward_cct != NULL) {
+    if (thread_obj->function_cct != NULL) {
       TMSG(TORCH_MONITOR, "Concatenate forward path backtrace2cct");
 
-      node = backtrace_phase_insert(thread_obj, thread_obj->forward_cct);
+      node = backtrace_phase_insert(thread_obj, thread_obj->function_cct);
     } else {
       TMSG(TORCH_MONITOR, "Slow path backtrace2cct");
 
@@ -231,7 +231,7 @@ backtrace_finalize
 
     TMSG(TORCH_MONITOR, "raw_frames: %lu, raw_python_frames: %lu, processed_python_frames: %lu processed_native_frames: %lu, processed_total_frames: %lu\n", raw_frames, raw_python_frames, processed_python_frames, processed_native_frames, processed_total_frames);
 
-    if (thread_obj->forward_cct == NULL) {
+    if (thread_obj->function_cct == NULL) {
       assert((thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_FORWARD));
       // else forward
       // nested level = 0
@@ -270,11 +270,11 @@ cct_finalize
 {
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
 
-  if (thread_obj->forward_cct != NULL) {
+  if (thread_obj->function_cct != NULL) {
     if (thread_obj->prev_cct == NULL) {
       // backward
       // nested level = 0, update cached CCT
-      cursor = backtrace_phase_insert(thread_obj, thread_obj->forward_cct);
+      cursor = backtrace_phase_insert(thread_obj, thread_obj->function_cct);
       thread_obj->prev_cct = cursor;
     } else {
       // forward or backward
