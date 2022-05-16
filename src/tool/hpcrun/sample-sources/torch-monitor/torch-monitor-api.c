@@ -25,6 +25,7 @@
     }                                                      \
   } while (0)
 
+
 static bool torch_monitor_enabled = false;
 
 bool
@@ -78,6 +79,9 @@ forward_function_cct_get
 
   cct = forward_function_cct_lookup(thread_obj, cct);
 
+  ip_normalized_t ip_norm = hpcrun_cct_addr(cct)->ip_norm;
+  TMSG(TORCH_MONITOR, "Forward find function_cct lm_id: %u lm_ip: %p", ip_norm.lm_id, ip_norm.lm_ip);
+
   return cct;
 }
 
@@ -123,7 +127,7 @@ forward_function_callback
   thread_obj->domain = TORCH_MONITOR_DOMAIN_FUNCTION;
   // Save function ip_norm so future unwinding can use ip_norm to add a function node
   thread_obj->function_ip_norm = torch_monitor_function_ip(function_name);
-  // Get the function cct
+  // Get the function cct using unwinding
   cct_node_t *cct = forward_function_cct_get(thread_obj);
 
   // A node in a computation graph can be without backward operations.
@@ -157,6 +161,9 @@ backward_function_cct_update
   thread_data_t* td = hpcrun_get_thread_data();
   thread_obj->function_cct = hpcrun_cct_insert_path_return_leaf(
     td->core_profile_trace_data.epoch->csdata.tree_root, cct);
+
+  ip_normalized_t ip_norm = hpcrun_cct_addr(thread_obj->function_cct)->ip_norm;
+  TMSG(TORCH_MONITOR, "Backward find function_cct lm_id: %u lm_ip: %p", ip_norm.lm_id, ip_norm.lm_ip);
 }
 
 

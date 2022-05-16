@@ -14,6 +14,8 @@
 
 #define TORCH_MONITOR_MODULE_ID_NULL -1
 
+#define TORCH_MONITOR_ADDITIONAL_FRAMES 2
+
 static bool torch_monitor_native_stack_enabled = false;
 
 static logical_metadata_store_t *torch_monitor_metadata = NULL;
@@ -79,25 +81,39 @@ backtrace_function_insert
 }
 
 
+static bool
+btbuf_ensure
+(
+ size_t num_frames
+)
+{
+  // Allocate additional frames
+  thread_data_t* td = hpcrun_get_thread_data();
+  size_t original_size = td->btbuf_end - td->btbuf_beg;
+
+  while ((td->btbuf_end - td->btbuf_beg) < num_frames) {
+    td->btbuf_cur = hpcrun_expand_btbuf();
+    td->btbuf_sav = td->btbuf_end;
+  }
+
+  size_t cur_size = td->btbuf_end - td->btbuf_beg;
+  TMSG(TORCH_MONITOR, "Expand btbuf from %lu to %lu", original_size, cur_size);
+
+  return cur_size != original_size;
+}
+
+
 static void
 python_callpath_unwind
 (
  torch_monitor_thread_obj_t *thread_obj,
- frame_t **btbuf_cur,
- bool expand  // If the backtrace buffer should be expanded
+ frame_t **btbuf_cur
 )
 {
   TMSG(TORCH_MONITOR, "Frame start ==================================================");
 
-  torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
-    &thread_obj->python_cur_num_states);
-
   int i;
   for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
-    if (expand) {
-      hpcrun_ensure_btbuf_avail();
-    }
-
     torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
     uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata, python_state->function_name,
       python_state->file_name, python_state->function_first_lineno);
@@ -152,7 +168,14 @@ torch_monitor_backtrace2cct
       td->btbuf_cur = td->btbuf_beg;  // innermost
       td->btbuf_sav = td->btbuf_end;  // FIXME: is it needed?
 
-      python_callpath_unwind(thread_obj, &(td->btbuf_cur), true);
+      // Update python states
+      torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
+        &thread_obj->python_cur_num_states);
+
+      // Ensure btbuf is available
+      btbuf_ensure(thread_obj->python_cur_num_states + 1);
+
+      python_callpath_unwind(thread_obj, &(td->btbuf_cur));
 
       frame_t* bt_beg = td->btbuf_beg;      // innermost, inclusive 
       frame_t* bt_end = td->btbuf_cur - 1;  // outermost, inclusive
@@ -223,38 +246,53 @@ backtrace_finalize
     // Has python frames but python module is not found
     assert(!(python_module_id == TORCH_MONITOR_MODULE_ID_NULL && thread_obj->python_cur_num_states != 0));
 
-    size_t raw_frames = bt->last - bt->begin + 1;
-    size_t raw_python_frames = bt->last - btbuf_cur;  // btbuf_cur is a native frame
-    size_t processed_python_frames = thread_obj->python_cur_num_states;
-    size_t processed_native_frames = btbuf_cur - bt->begin + 1;
-    size_t processed_total_frames = processed_native_frames + processed_python_frames;
-
-    TMSG(TORCH_MONITOR, "raw_frames: %lu, raw_python_frames: %lu, processed_python_frames: %lu processed_native_frames: %lu, processed_total_frames: %lu\n", raw_frames, raw_python_frames, processed_python_frames, processed_native_frames, processed_total_frames);
-
     if (thread_obj->function_cct == NULL) {
       assert((thread_obj->thread_state & TORCH_MONITOR_THREAD_STATE_FORWARD));
-      // else forward
-      // nested level = 0
+
+      // Update python_states
+      torch_monitor_python_state_get(thread_obj->python_max_num_states, thread_obj->python_states,
+        &thread_obj->python_cur_num_states);
+
+      size_t raw_frames = bt->last - bt->begin + 1;
+      size_t raw_python_frames = bt->last - btbuf_cur + 1;  // btbuf_cur is a raw python frame
+      size_t processed_python_frames = thread_obj->python_cur_num_states;
+      size_t processed_native_frames = btbuf_cur - bt->begin;
+      size_t processed_total_frames = processed_native_frames + processed_python_frames;
+
+      // Nested level = 0
       // native ...     / python ...
       // bt->begin ... btbuf_cur ... bt->last
+      TMSG(TORCH_MONITOR, "raw_frames: %lu, raw_python_frames: %lu, processed_python_frames: %lu processed_native_frames: %lu, processed_total_frames: %lu\n", raw_frames, raw_python_frames, processed_python_frames, processed_native_frames, processed_total_frames);
+
+      if (btbuf_ensure(processed_total_frames + TORCH_MONITOR_ADDITIONAL_FRAMES)) {
+        // btbuf was expanded
+        thread_data_t* td = hpcrun_get_thread_data();
+        bt->begin = td->btbuf_beg;
+        btbuf_cur = bt->begin + processed_native_frames;
+      }
+
+      // Move btbuf
+      memmove(btbuf_cur + TORCH_MONITOR_ADDITIONAL_FRAMES, btbuf_cur, sizeof(frame_t) * raw_python_frames);
       
       // forward node
-      hpcrun_ensure_btbuf_avail();
       btbuf_cur->ip_norm = torch_monitor_op_placeholder_ip(torch_monitor_op_placeholder_type_forward);
       btbuf_cur++;
 
       // function node
-      hpcrun_ensure_btbuf_avail();
       btbuf_cur->ip_norm = thread_obj->function_ip_norm;
       btbuf_cur++;
 
-      python_callpath_unwind(thread_obj, &btbuf_cur, false);
+      python_callpath_unwind(thread_obj, &btbuf_cur);
 
       // Move native buf to the end
-      bt->last = btbuf_cur + processed_python_frames - 1;
+      bt->last = bt->begin + processed_total_frames + TORCH_MONITOR_ADDITIONAL_FRAMES - 1;
+
+      TMSG(TORCH_MONITOR, "Update forward btbuf");
     } else {
       // Only unwind native frames
-      bt->last = bt->begin + processed_native_frames - 1;
+      bt->last = btbuf_cur - 1;
+
+      TMSG(TORCH_MONITOR, "Update backward btbuf");
     }
   }
 }
@@ -275,15 +313,15 @@ cct_finalize
       // backward
       // nested level = 0, update cached CCT
       cursor = backtrace_phase_insert(thread_obj, thread_obj->function_cct);
-      thread_obj->prev_cct = cursor;
     } else {
-      // forward or backward
+      // forward
       // nested level != 0, use cached CCT
       cursor = thread_obj->prev_cct;
     }
   }
   // else forward
   // nested level = 0
+  // TODO(Keren): cache forward cct
 
   return cursor;
 }
