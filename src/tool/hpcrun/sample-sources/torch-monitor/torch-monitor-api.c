@@ -39,7 +39,7 @@ torch_monitor_status_get
 
 
 static cct_node_t *
-forward_function_cct_lookup
+forward_forward_cct_lookup
 (
  torch_monitor_thread_obj_t *thread_obj,
  cct_node_t *cct
@@ -55,12 +55,12 @@ forward_function_cct_lookup
     cct = hpcrun_cct_parent(cct);
   }
   assert(cct != NULL);
-  return hpcrun_cct_parent(cct);
+  return cct;
 }
 
 
 static cct_node_t *
-forward_function_cct_get
+forward_cct_get
 (
  torch_monitor_thread_obj_t *thread_obj
 )
@@ -76,11 +76,6 @@ forward_function_cct_get
   cct_node_t *cct = hpcrun_sample_callpath(&uc, zero_metric_id, zero_metric_incr, 0, 1, NULL).sample_node;
 
   hpcrun_safe_exit();
-
-  cct = forward_function_cct_lookup(thread_obj, cct);
-
-  ip_normalized_t ip_norm = hpcrun_cct_addr(cct)->ip_norm;
-  TMSG(TORCH_MONITOR, "Forward find function_cct lm_id: %u lm_ip: %p", ip_norm.lm_id, ip_norm.lm_ip);
 
   return cct;
 }
@@ -128,7 +123,14 @@ forward_function_callback
   // Save function ip_norm so future unwinding can use ip_norm to add a function node
   thread_obj->function_ip_norm = torch_monitor_function_ip(function_name);
   // Get the function cct using unwinding
-  cct_node_t *cct = forward_function_cct_get(thread_obj);
+  cct_node_t *cct = forward_cct_get(thread_obj);
+  cct_node_t *forward_cct = forward_forward_cct_lookup(thread_obj, cct);
+  cct_node_t *function_cct = hpcrun_cct_parent(forward_cct);
+
+  if (torch_monitor_native_stack_status_get()) {
+    // In the native mode, prev_cct can only be cached after unwinding is done
+    thread_obj->prev_cct = forward_cct;
+  }
 
   // A node in a computation graph can be without backward operations.
   // In this case, the <forward_thread_id, sequence_number> pair could repeat,
@@ -141,12 +143,12 @@ forward_function_callback
   torch_monitor_forward_cct_map_entry_t *entry = torch_monitor_forward_cct_map_lookup(key);
   if (entry == NULL) {
     TMSG(TORCH_MONITOR, "Insert forward_thread_id %lu sequence_number %ld", forward_thread_id, sequence_number);
-    torch_monitor_forward_cct_map_insert(key, cct);
+    torch_monitor_forward_cct_map_insert(key, function_cct);
   } else {
     TMSG(TORCH_MONITOR, "Update forward_thread_id %lu sequence_number %ld", forward_thread_id, sequence_number);
     // We can update without holding a lock.
     // When a forward op is in progress, its backward op has not started
-    torch_monitor_forward_cct_map_entry_cct_update(entry, cct);
+    torch_monitor_forward_cct_map_entry_cct_update(entry, function_cct);
   }
 }
 
@@ -161,9 +163,6 @@ backward_function_cct_update
   thread_data_t* td = hpcrun_get_thread_data();
   thread_obj->function_cct = hpcrun_cct_insert_path_return_leaf(
     td->core_profile_trace_data.epoch->csdata.tree_root, cct);
-
-  ip_normalized_t ip_norm = hpcrun_cct_addr(thread_obj->function_cct)->ip_norm;
-  TMSG(TORCH_MONITOR, "Backward find function_cct lm_id: %u lm_ip: %p", ip_norm.lm_id, ip_norm.lm_ip);
 }
 
 

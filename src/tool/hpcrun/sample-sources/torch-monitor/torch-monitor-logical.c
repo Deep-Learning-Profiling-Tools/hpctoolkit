@@ -156,11 +156,11 @@ torch_monitor_backtrace2cct
     }
   } else {
     if (thread_obj->function_cct != NULL) {
-      TMSG(TORCH_MONITOR, "Concatenate forward path backtrace2cct");
+      TMSG(TORCH_MONITOR, "Backward fast path backtrace2cct");
 
       node = backtrace_phase_insert(thread_obj, thread_obj->function_cct);
     } else {
-      TMSG(TORCH_MONITOR, "Slow path backtrace2cct");
+      TMSG(TORCH_MONITOR, "Forward slow path backtrace2cct");
 
       // Otherwise, we unwind python call path
       thread_data_t* td = hpcrun_get_thread_data();
@@ -287,12 +287,12 @@ backtrace_finalize
       // Move native buf to the end
       bt->last = bt->begin + processed_total_frames + TORCH_MONITOR_ADDITIONAL_FRAMES - 1;
 
-      TMSG(TORCH_MONITOR, "Update forward btbuf");
+      TMSG(TORCH_MONITOR, "Forward update btbuf");
     } else {
       // Only unwind native frames
       bt->last = btbuf_cur - 1;
 
-      TMSG(TORCH_MONITOR, "Update backward btbuf");
+      TMSG(TORCH_MONITOR, "Backward update btbuf");
     }
   }
 }
@@ -309,16 +309,24 @@ cct_finalize
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
 
   if (thread_obj->function_cct != NULL) {
+    // backward
     if (thread_obj->prev_cct == NULL) {
-      // forward or backward
+      TMSG(TORCH_MONITOR, "Backward update cached prev_cct");
       // nested level = 0, update cached CCT
       cursor = backtrace_phase_insert(thread_obj, thread_obj->function_cct);
       // We can cache backward prev_cct now
       thread_obj->prev_cct = cursor;
     } else {
-      // forward or backward
+      TMSG(TORCH_MONITOR, "Backward get cached prev_cct");
       // nested level != 0, use cached CCT
       cursor = thread_obj->prev_cct;
+    }
+  } else {
+    if (thread_obj->prev_cct != NULL) {
+      TMSG(TORCH_MONITOR, "Forward get cached prev_cct");
+      cursor = thread_obj->prev_cct;
+    } else {
+      TMSG(TORCH_MONITOR, "Forward no cached prev_cct");
     }
   }
   // else forward
