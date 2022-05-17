@@ -14,7 +14,7 @@
 #include "torch-monitor-logical.h"
 #include "torch-monitor-thread-obj.h"
 #include "torch-monitor-op-placeholders.h"
-#include "torch-monitor-forward-cct-map.h"
+#include "torch-monitor-function-cct-map.h"
 
 #define TORCH_MONITOR_CALL(func, args)                     \
   do {                                                     \
@@ -136,19 +136,19 @@ forward_function_callback
   // In this case, the <forward_thread_id, sequence_number> pair could repeat,
   // so that we could have multiple pair->cct mappings.
   // We memoize the last pair->cct mapping and use the cct to relate the correponsding backward op.
-  forward_key_t key = {
+  function_key_t key = {
     .forward_thread_id = forward_thread_id,
     .sequence_number = sequence_number
   };
-  torch_monitor_forward_cct_map_entry_t *entry = torch_monitor_forward_cct_map_lookup(key);
+  torch_monitor_function_cct_map_entry_t *entry = torch_monitor_function_cct_map_lookup(key);
   if (entry == NULL) {
     TMSG(TORCH_MONITOR, "Insert forward_thread_id %lu sequence_number %ld", forward_thread_id, sequence_number);
-    torch_monitor_forward_cct_map_insert(key, function_cct);
+    torch_monitor_function_cct_map_insert(key, function_cct);
   } else {
     TMSG(TORCH_MONITOR, "Update forward_thread_id %lu sequence_number %ld", forward_thread_id, sequence_number);
     // We can update without holding a lock.
     // When a forward op is in progress, its backward op has not started
-    torch_monitor_forward_cct_map_entry_cct_update(entry, function_cct);
+    torch_monitor_function_cct_map_entry_cct_update(entry, function_cct);
   }
 }
 
@@ -191,15 +191,15 @@ backward_function_callback
   // Overwrite forward domain, even upcoming forward calls are in the backward domain
   thread_obj->domain = TORCH_MONITOR_DOMAIN_BACKWARD_FUNCTION;
 
-  forward_key_t key = {
+  function_key_t key = {
     .forward_thread_id = forward_thread_id,
     .sequence_number = sequence_number
   };
 
-  torch_monitor_forward_cct_map_entry_t *entry = torch_monitor_forward_cct_map_lookup(key);
+  torch_monitor_function_cct_map_entry_t *entry = torch_monitor_function_cct_map_lookup(key);
   if (entry != NULL) {
     TMSG(TORCH_MONITOR, "Lookup forward_thread_id %lu sequence_number %ld", forward_thread_id, sequence_number);
-    cct_node_t *cct = torch_monitor_forward_cct_map_entry_cct_get(entry);
+    cct_node_t *cct = torch_monitor_function_cct_map_entry_cct_get(entry);
     assert(cct != NULL);
     backward_function_cct_update(cct, thread_obj);
   }

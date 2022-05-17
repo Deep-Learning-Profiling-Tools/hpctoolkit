@@ -41,49 +41,49 @@
 //
 // ******************************************************* EndRiceCopyright *
 
-#ifndef torch_monitor_forward_cct_map_h
-#define torch_monitor_forward_cct_map_h
+#ifndef torch_monitor_function_cct_map_h
+#define torch_monitor_function_cct_map_h
 
 #include <stdint.h>
 
 #include <hpcrun/cct/cct.h>
 
-typedef struct torch_monitor_forward_cct_map_entry_s torch_monitor_forward_cct_map_entry_t;
+typedef struct torch_monitor_function_cct_map_entry_s torch_monitor_function_cct_map_entry_t;
 
-typedef struct forward_key_t {
+typedef struct function_key_t {
   uint64_t forward_thread_id;
   int64_t sequence_number;
-} forward_key_t;
+} function_key_t;
 
 
 void
-torch_monitor_forward_cct_map_insert
+torch_monitor_function_cct_map_insert
 (
- forward_key_t key,
+ function_key_t key,
  cct_node_t *cct
 );
 
 
-torch_monitor_forward_cct_map_entry_t *
-torch_monitor_forward_cct_map_lookup
+torch_monitor_function_cct_map_entry_t *
+torch_monitor_function_cct_map_lookup
 (
- forward_key_t key
+ function_key_t key
 );
 
 
 void
-torch_monitor_forward_cct_map_entry_cct_update
+torch_monitor_function_cct_map_entry_cct_update
 (
- torch_monitor_forward_cct_map_entry_t *entry,
+ torch_monitor_function_cct_map_entry_t *entry,
  cct_node_t *cct
 );
 
 
 cct_node_t *
-torch_monitor_forward_cct_map_entry_cct_get
+torch_monitor_function_cct_map_entry_cct_get
 (
- torch_monitor_forward_cct_map_entry_t *entry
+ torch_monitor_function_cct_map_entry_t *entry
 );
 
-#endif  // torch_monitor_forward_cct_map_h
+#endif  // torch_monitor_function_cct_map_h
 
