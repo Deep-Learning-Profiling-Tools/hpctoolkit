@@ -310,11 +310,13 @@ cct_finalize
 
   if (thread_obj->function_cct != NULL) {
     if (thread_obj->prev_cct == NULL) {
-      // backward
+      // forward or backward
       // nested level = 0, update cached CCT
       cursor = backtrace_phase_insert(thread_obj, thread_obj->function_cct);
+      // We can cache backward prev_cct now
+      thread_obj->prev_cct = cursor;
     } else {
-      // forward
+      // forward or backward
       // nested level != 0, use cached CCT
       cursor = thread_obj->prev_cct;
     }
