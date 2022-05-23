@@ -6,6 +6,15 @@
 #include <hpcrun/cct/cct.h>
 #include <hpcrun/metrics.h>
 #include <hpcrun/thread_data.h>
+#include <hpcrun/messages/messages.h>
+
+
+#define TORCH_MONITOR_MSG(...)          \
+  do {                                  \
+    bool unsafe = hpcrun_safe_enter();  \
+    TMSG(TORCH_MONITOR, __VA_ARGS__);   \
+    if (unsafe) hpcrun_safe_exit();     \
+  } while (0)
 
 bool torch_monitor_native_stack_status_get();
 
