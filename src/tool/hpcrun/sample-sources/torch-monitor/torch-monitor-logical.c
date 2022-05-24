@@ -144,6 +144,10 @@ torch_monitor_backtrace2cct
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
   cct_node_t *node = NULL;
 
+  if (thread_obj->thread_state == TORCH_MONITOR_THREAD_STATE_NONE) {
+    return NULL;
+  }
+
   if (thread_obj->prev_cct != NULL) {
     TORCH_MONITOR_MSG("Fast path backtrace2cct");
 
@@ -231,10 +235,15 @@ backtrace_finalize
  int is_sync
 )
 {
+  torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
+
+  if (thread_obj->thread_state == TORCH_MONITOR_THREAD_STATE_NONE) {
+    return;
+  }
+
   // btbuf_cur is the start of raw python frames
   frame_t *btbuf_cur = python_start_frame_get(bt);
 
-  torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
   if (thread_obj->prev_cct != NULL) {
     TORCH_MONITOR_MSG("Fast path backtrace_finalize");
 
@@ -308,6 +317,10 @@ cct_finalize
 {
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
 
+  if (thread_obj->thread_state == TORCH_MONITOR_THREAD_STATE_NONE) {
+    return cursor;
+  }
+
   if (thread_obj->function_cct != NULL) {
     // backward
     if (thread_obj->prev_cct == NULL) {
@@ -321,13 +334,11 @@ cct_finalize
       // nested level != 0, use cached CCT
       cursor = thread_obj->prev_cct;
     }
+  } else if (thread_obj->prev_cct != NULL) {
+    TORCH_MONITOR_MSG("Forward get cached prev_cct");
+    cursor = thread_obj->prev_cct;
   } else {
-    if (thread_obj->prev_cct != NULL) {
-      TORCH_MONITOR_MSG("Forward get cached prev_cct");
-      cursor = thread_obj->prev_cct;
-    } else {
-      TORCH_MONITOR_MSG("Forward no cached prev_cct");
-    }
+    TORCH_MONITOR_MSG("Forward no cached prev_cct");
   }
   // else forward
   // nested level = 0

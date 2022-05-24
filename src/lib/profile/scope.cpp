@@ -147,7 +147,8 @@ std::string Scope::enumerated_fallback_name() const {
     for(int shift = 56; shift >= 0; shift -= 8) {
       unsigned char c = (unsigned char)((data.enumerated >> shift) & 0xff);
       if(std::isprint(c)) ss << c;
-      else ss << '\\' << std::setw(2) << c;
+      //hpcviewer does not recognize many characters
+      //else ss << '\\' << std::setw(2) << c;
     }
     return ss.str();
   }
