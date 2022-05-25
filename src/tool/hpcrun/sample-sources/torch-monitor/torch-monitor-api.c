@@ -239,6 +239,8 @@ torch_monitor_callback
  torch_monitor_callback_data_t *callback_data
 )
 {
+  bool unsafe = hpcrun_safe_enter();
+
   TORCH_MONITOR_MSG("Enter torch_monitor_callback");
 
   torch_monitor_thread_obj_t *thread_obj = torch_monitor_thread_obj_get();
@@ -261,6 +263,8 @@ torch_monitor_callback
   }
 
   TORCH_MONITOR_MSG("Exit torch_monitor_callback");
+
+  if (unsafe) hpcrun_safe_exit();
 }
 
 
