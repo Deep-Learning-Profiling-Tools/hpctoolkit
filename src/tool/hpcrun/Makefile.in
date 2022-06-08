@@ -265,9 +265,9 @@ host_triplet = @host@
 @HOST_CPU_AARCH64_TRUE@am__append_96 = $(MY_AARCH64_INCLUDE_DIRS)
 @HOST_CPU_AARCH64_TRUE@am__append_97 = $(MY_AARCH64_INCLUDE_DIRS)
 @HOST_CPU_AARCH64_TRUE@am__append_98 = $(MY_AARCH64_INCLUDE_DIRS)
-<<<<<<< HEAD
 @HOST_CPU_AARCH64_TRUE@am__append_99 = $(MY_AARCH64_INCLUDE_DIRS)
 @HOST_CPU_AARCH64_TRUE@am__append_100 = $(MY_AARCH64_INCLUDE_DIRS)
+<<<<<<< HEAD
 @HOST_CPU_AARCH64_TRUE@am__append_101 = $(MY_AARCH64_INCLUDE_DIRS)
 @HOST_CPU_AARCH64_TRUE@am__append_102 = $(MY_AARCH64_INCLUDE_DIRS)
 @OPT_PAPI_DYNAMIC_TRUE@am__append_103 = $(MY_PAPI_FILES)
@@ -374,6 +374,59 @@ host_triplet = @host@
 @OPT_ENABLE_LUSH_TRUE@@OPT_WITH_CILK_TRUE@am__append_147 = libagent-cilk.la
 @OPT_ENABLE_LUSH_TRUE@am__append_148 = libagent-pthread.la \
 >>>>>>> 4d68dab86... Link error fixed
+=======
+@OPT_PAPI_DYNAMIC_TRUE@am__append_101 = $(MY_PAPI_FILES)
+@OPT_PAPI_DYNAMIC_TRUE@am__append_102 = $(PAPI_INC_FLGS)
+@OPT_PAPI_DYNAMIC_TRUE@am__append_103 = $(PAPI_LD_FLGS)
+@OPT_PAPI_DYNAMIC_TRUE@am__append_104 = -DHPCRUN_SS_PAPI
+@OPT_ENABLE_TORCH_MONITOR_TRUE@am__append_105 = $(MY_TORCH_MONITOR_FILES)
+@OPT_ENABLE_TORCH_MONITOR_TRUE@am__append_106 = $(MY_TORCH_MONITOR_FILES)
+@OPT_ENABLE_TORCH_MONITOR_TRUE@am__append_107 = -DTORCH_MONITOR_ENABLE $(TORCH_MONITOR_INC_FLGS)
+@OPT_ENABLE_TORCH_MONITOR_TRUE@am__append_108 = $(TORCH_MONITOR_LD_FLGS)
+@OPT_ENABLE_TORCH_MONITOR_TRUE@am__append_109 = -DHPCRUN_SS_TORCH_MONITOR
+@OPT_ENABLE_CUPTI_TRUE@am__append_110 = $(MY_CUPTI_FILES)
+@OPT_ENABLE_CUPTI_TRUE@am__append_111 = $(MY_CUPTI_FILES)
+@OPT_ENABLE_CUPTI_TRUE@am__append_112 = $(CUPTI_INC_FLGS)
+@OPT_ENABLE_CUPTI_TRUE@am__append_113 = -DHPCRUN_SS_NVIDIA
+@OPT_PAPI_CUPTI_TRUE@am__append_114 = $(CUPTI_INC_FLGS)
+@OPT_PAPI_CUPTI_TRUE@am__append_115 = -DHPCRUN_SS_PAPI_C_CUPTI
+@OPT_PAPI_ROCM_TRUE@am__append_116 = $(ROCM_INC_FLGS)
+@OPT_PAPI_ROCM_TRUE@am__append_117 = -DHPCRUN_SS_PAPI_C_ROCM
+@OPT_PAPI_STATIC_TRUE@am__append_118 = $(MY_PAPI_FILES)
+@OPT_PAPI_STATIC_TRUE@am__append_119 = $(PAPI_INC_FLGS)
+@OPT_PAPI_STATIC_TRUE@am__append_120 = $(OPT_PAPI_LIBS_STAT)
+@OPT_PAPI_STATIC_TRUE@am__append_121 = -DHPCRUN_SS_PAPI
+@OPT_ENABLE_UPC_TRUE@am__append_122 = $(MY_UPC_FILES)
+@OPT_ENABLE_UPC_TRUE@am__append_123 = $(MY_UPC_FILES)
+@OPT_ENABLE_UPC_TRUE@am__append_124 = $(OPT_UPC_IFLAGS)
+@OPT_ENABLE_UPC_TRUE@am__append_125 = $(OPT_UPC_IFLAGS)
+@OPT_ENABLE_UPC_TRUE@am__append_126 = $(OPT_UPC_LDFLAGS)
+@OPT_ENABLE_LUSH_PTHREADS_TRUE@am__append_127 = -DLUSH_PTHREADS
+@OPT_ENABLE_LUSH_PTHREADS_TRUE@am__append_128 = -DLUSH_PTHREADS
+@OPT_ENABLE_CUDA_TRUE@am__append_129 = $(MY_CUDA_FILES)
+@OPT_ENABLE_CUDA_TRUE@am__append_130 = -DENABLE_CUDA
+@OPT_ENABLE_CUDA_TRUE@am__append_131 = $(OPT_CUDA_IFLAGS)
+@OPT_ENABLE_CUDA_TRUE@am__append_132 = $(MY_CUDA_FILES)
+@OPT_ENABLE_ROCM_TRUE@am__append_133 = $(MY_ROCM_FILES)
+@OPT_ENABLE_ROCM_TRUE@am__append_134 = -DENABLE_ROCM
+@OPT_ENABLE_ROCM_TRUE@am__append_135 = $(ROCM_INC_FLGS)
+@OPT_ENABLE_ROCM_TRUE@am__append_136 = -DHPCRUN_SS_AMD
+@OPT_ENABLE_LEVEL0_TRUE@am__append_137 = $(MY_LEVEL0_FILES)
+@OPT_ENABLE_LEVEL0_TRUE@am__append_138 = -DENABLE_LEVEL0
+@OPT_ENABLE_LEVEL0_TRUE@am__append_139 = $(OPT_LEVEL0_IFLAGS)
+@OPT_ENABLE_LEVEL0_TRUE@am__append_140 = -DHPCRUN_SS_LEVEL0
+@OPT_ENABLE_OPENCL_TRUE@am__append_141 = $(MY_OPENCL_FILES)
+@OPT_ENABLE_OPENCL_TRUE@am__append_142 = -DENABLE_OPENCL \
+@OPT_ENABLE_OPENCL_TRUE@	$(OPT_OCL_BH_IFLAGS)
+@OPT_ENABLE_OPENCL_TRUE@am__append_143 = $(OPT_OPENCL_IFLAGS)
+@OPT_ENABLE_OPENCL_TRUE@am__append_144 = -DHPCRUN_SS_OPENCL
+@OPT_ENABLE_GTPIN_TRUE@am__append_145 = $(MY_GTPIN_FILES)
+@OPT_ENABLE_GTPIN_TRUE@am__append_146 = -DENABLE_GTPIN -DGTPIN_LIBDIR=$(OPT_GTPIN_LIBDIR)
+@OPT_ENABLE_GTPIN_TRUE@am__append_147 = $(OPT_GTPIN_IFLAGS)
+@OPT_ENABLE_GTPIN_TRUE@am__append_148 = -DHPCRUN_SS_GTPIN
+@OPT_ENABLE_LUSH_TRUE@@OPT_WITH_CILK_TRUE@am__append_149 = libagent-cilk.la
+@OPT_ENABLE_LUSH_TRUE@am__append_150 = libagent-pthread.la \
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 @OPT_ENABLE_LUSH_TRUE@	libagent-tbb.la
 subdir = src/tool/hpcrun
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -2149,8 +2202,8 @@ bin_SCRIPTS = $(am__append_4) $(am__append_6)
 pkglibexec_SCRIPTS = $(am__append_1)
 include_HEADERS = $(am__append_2)
 pkglib_LIBRARIES = $(am__append_5)
-<<<<<<< HEAD
 pkglib_LTLIBRARIES = $(am__append_3) $(am__append_7) $(am__append_18) \
+<<<<<<< HEAD
 <<<<<<< HEAD
 	$(am__append_20) $(am__append_21) $(am__append_144) \
 	$(am__append_145)
@@ -2159,6 +2212,10 @@ CLEANFILES = $(am__append_26)
 =======
 	$(am__append_19) $(am__append_20) $(am__append_148) \
 	$(am__append_149)
+=======
+	$(am__append_19) $(am__append_20) $(am__append_149) \
+	$(am__append_150)
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 BUILT_SOURCES = $(am__append_24)
 CLEANFILES = $(am__append_25)
 @OPT_ENABLE_HPCRUN_DYNAMIC_TRUE@noinst_LTLIBRARIES = libhpcrun.la
@@ -2251,8 +2308,8 @@ UNW_MIPS_INCLUDE_DIRS = \
 
 UNW_MIPS_LD_FLAGS = 
 MY_CPP_DEFINES = -D_GNU_SOURCE -DINLINE_FN=1 -DLOCAL_BUILD=1 \
-<<<<<<< HEAD
 	-D__HIP_PLATFORM_HCC__=1 $(am__append_11) $(am__append_16) \
+<<<<<<< HEAD
 <<<<<<< HEAD
 	$(am__append_22) $(am__append_106) $(am__append_110) \
 	$(am__append_112) $(am__append_114) $(am__append_118) \
@@ -2262,6 +2319,12 @@ MY_CPP_DEFINES = -D_GNU_SOURCE -DINLINE_FN=1 -DLOCAL_BUILD=1 \
 	$(am__append_112) $(am__append_114) $(am__append_116) \
 	$(am__append_120) $(am__append_135) $(am__append_139) \
 	$(am__append_143) $(am__append_147)
+=======
+	$(am__append_21) $(am__append_104) $(am__append_109) \
+	$(am__append_113) $(am__append_115) $(am__append_117) \
+	$(am__append_121) $(am__append_136) $(am__append_140) \
+	$(am__append_144) $(am__append_148)
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 MY_BASE_FILES = utilities/first_func.c main.h main.c disabled.c \
 	closure-registry.c cct_insert_backtrace.c \
 	cct_backtrace_finalize.c env.c epoch.c files.c \
@@ -2530,16 +2593,9 @@ MY_AARCH64_INCLUDE_DIRS = \
 libhpcrun_la_SOURCES = $(MY_BASE_FILES) $(MY_DYNAMIC_FILES) \
 	$(am__append_28) $(am__append_29) $(am__append_42) \
 	$(am__append_57) $(am__append_73) $(am__append_86) \
-	$(am__append_101) $(am__append_105) $(am__append_109) \
-	$(am__append_121) $(am__append_128) $(am__append_132) \
-	$(am__append_136) $(am__append_140) $(am__append_144) \
-=======
-	$(am__append_26) $(am__append_27) $(am__append_40) \
-	$(am__append_55) $(am__append_71) $(am__append_84) \
-	$(am__append_99) $(am__append_103) $(am__append_108) \
-	$(am__append_120) $(am__append_127) $(am__append_131) \
-	$(am__append_135) $(am__append_139) $(am__append_143) \
->>>>>>> 4d68dab86... Link error fixed
+	$(am__append_101) $(am__append_105) $(am__append_110) \
+	$(am__append_122) $(am__append_129) $(am__append_133) \
+	$(am__append_137) $(am__append_141) $(am__append_145) \
 	$(UNW_SOURCE_FILES) utilities/last_func.c
 >>>>>>> 0ee101039 (Compile through after integrating torch-monitor)
 libhpcrun_fake_audit_la_SOURCES = \
@@ -2551,8 +2607,13 @@ libhpcrun_audit_la_SOURCES = \
 libhpcrun_o_SOURCES = $(MY_BASE_FILES) $(MY_STATIC_FILES) \
 	$(am__append_30) $(am__append_43) $(am__append_58) \
 	$(am__append_74) $(am__append_87) $(am__append_106) \
+<<<<<<< HEAD
 	$(am__append_110) $(am__append_117) $(am__append_122) \
 	$(am__append_131) $(UNW_SOURCE_FILES) utilities/last_func.c
+=======
+	$(am__append_111) $(am__append_118) $(am__append_123) \
+	$(am__append_132) $(UNW_SOURCE_FILES) utilities/last_func.c
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 libhpcrun_wrap_a_SOURCES = \
 	monitor-exts/openmp.c
 
@@ -2598,18 +2659,10 @@ libhpctoolkit_a_SOURCES = \
 libhpcrun_la_CPPFLAGS = $(MY_CPP_DEFINES) $(MY_INCLUDE_DIRS) \
 	$(am__append_22) $(am__append_31) $(am__append_44) \
 	$(am__append_59) $(am__append_75) $(am__append_88) \
-	$(am__append_102) $(am__append_107) $(am__append_111) \
-	$(am__append_113) $(am__append_115) $(am__append_123) \
-	$(am__append_126) $(am__append_129) $(am__append_133) \
-	$(am__append_137) $(am__append_141) $(am__append_145) \
-=======
-	$(am__append_20) $(am__append_29) $(am__append_42) \
-	$(am__append_57) $(am__append_73) $(am__append_86) \
-	$(am__append_100) $(am__append_105) $(am__append_110) \
-	$(am__append_112) $(am__append_114) $(am__append_122) \
-	$(am__append_125) $(am__append_128) $(am__append_132) \
-	$(am__append_136) $(am__append_140) $(am__append_144) \
->>>>>>> 4d68dab86... Link error fixed
+	$(am__append_102) $(am__append_107) $(am__append_112) \
+	$(am__append_114) $(am__append_116) $(am__append_124) \
+	$(am__append_127) $(am__append_130) $(am__append_134) \
+	$(am__append_138) $(am__append_142) $(am__append_146) \
 	$(UNW_INCLUDE_DIRS)
 >>>>>>> 0ee101039 (Compile through after integrating torch-monitor)
 libhpcrun_fake_audit_la_CPPFLAGS = \
@@ -2623,8 +2676,13 @@ libhpcrun_audit_la_CPPFLAGS = \
 libhpcrun_o_CPPFLAGS = -DHPCRUN_STATIC_LINK $(MY_CPP_DEFINES) \
 	$(MY_INCLUDE_DIRS) $(am__append_23) $(am__append_32) \
 	$(am__append_45) $(am__append_60) $(am__append_76) \
+<<<<<<< HEAD
 	$(am__append_89) $(am__append_118) $(am__append_124) \
 	$(am__append_127) $(UNW_INCLUDE_DIRS)
+=======
+	$(am__append_89) $(am__append_119) $(am__append_125) \
+	$(am__append_128) $(UNW_INCLUDE_DIRS)
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 libhpcrun_wrap_a_CPPFLAGS = \
 	-DHPCRUN_STATIC_LINK		\
 	$(MY_CPP_DEFINES)		\
@@ -2681,8 +2739,13 @@ libhpctoolkit_a_CPPFLAGS = \
 # cflags
 #-----------------------------------------------------------
 libhpcrun_la_CFLAGS = $(CFLAGS) $(HOST_CFLAGS) $(PERFMON_CFLAGS) \
+<<<<<<< HEAD
 	$(am__append_130) $(am__append_134) $(am__append_138) \
 	$(am__append_142) $(am__append_146) $(GOTCHA_IFLAGS)
+=======
+	$(am__append_131) $(am__append_135) $(am__append_139) \
+	$(am__append_143) $(am__append_147) $(GOTCHA_IFLAGS)
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 libhpcrun_o_CFLAGS = $(CFLAGS) $(HOST_CFLAGS) $(PERFMON_CFLAGS)
 libhpcrun_fake_audit_la_CFLAGS = $(CFLAGS) $(HOST_CFLAGS)
 libhpcrun_audit_la_CFLAGS = $(CFLAGS) $(HOST_CFLAGS)
@@ -2724,8 +2787,13 @@ libhpcrun_la_LDFLAGS = -Wl,-Bsymbolic -Wl,-rpath=$$ORIGIN -ldl \
 libhpcrun_la_LDFLAGS = -Wl,-Bsymbolic -L$(LIBMONITOR_LIB) -lmonitor \
 	-lpthread -lrt -L$(LIBELF_LIB) -lelf $(PERFMON_LDFLAGS_DYN) \
 <<<<<<< HEAD
+<<<<<<< HEAD
 	$(OPT_ROCM_LDFLAGS) $(am__append_103) $(am__append_125) \
 	$(GOTCHA_LDFLAGS) $(UNW_DYNAMIC_LD_FLAGS)
+=======
+	$(OPT_ROCM_LDFLAGS) $(am__append_103) $(am__append_108) \
+	$(am__append_126) $(GOTCHA_LDFLAGS) $(UNW_DYNAMIC_LD_FLAGS)
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 libhpcrun_fake_audit_la_LDFLAGS = -Wl,-Bsymbolic -ldl
 libhpcrun_audit_la_LDFLAGS = -Wl,-Bsymbolic -ldl
 libhpcrun_ga_la_LDFLAGS = -Wl,-Bsymbolic
@@ -2746,7 +2814,11 @@ libhpcrun_la_LIBADD = $(PROF_LEAN_A) $(SUPPORT_LEAN_A) \
 	$(OUR_LIBUNWIND_A) $(OUR_LZMA_A) $(am__append_27)
 libhpcrun_o_LDADD = $(PROF_LEAN_A) $(SUPPORT_LEAN_A) \
 	$(PERFMON_LDFLAGS_STAT) $(OUR_LIBUNWIND_A) $(OUR_LZMA_A) \
+<<<<<<< HEAD
 	$(am__append_27) $(am__append_119) $(UNW_STATIC_LD_FLAGS)
+=======
+	$(am__append_27) $(am__append_120) $(UNW_STATIC_LD_FLAGS)
+>>>>>>> 8b7a48b26 (Resolve conflicts)
 MY_AGENT_INCLUDE_DIRS = $(MY_INCLUDE_DIRS) $(am__append_72) \
 	$(UNW_INCLUDE_DIRS)
 @HOST_CPU_AARCH64_TRUE@libhpcrun_la_CCASFLAGS = $(AM_CCASFLAGS)
