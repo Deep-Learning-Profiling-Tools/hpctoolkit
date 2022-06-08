@@ -1004,7 +1004,7 @@ cupti_subscriber_callback
 
         gpu_op_ccts_t gpu_op_ccts;
 
-        hpcrun_safe_enter();
+        int unsafe = hpcrun_safe_enter();
 
         if (is_kernel_op) {
           // Insert kernel ip in advance to differentiate multiple kernels sharing the same call path.
@@ -1025,7 +1025,7 @@ cupti_subscriber_callback
           gpu_op_ccts_insert(api_node, &gpu_op_ccts, gpu_op_placeholder_flags);
         }
 
-        hpcrun_safe_exit();
+        if (unsafe) hpcrun_safe_exit();
 
         // Generate notification entry
         uint64_t cpu_submit_time = hpcrun_nanotime();
@@ -1047,7 +1047,7 @@ cupti_subscriber_callback
 
         gpu_op_ccts_t gpu_op_ccts;
 
-        hpcrun_safe_enter();
+        int unsafe = hpcrun_safe_enter();
 
         gpu_op_ccts_insert(api_node, &gpu_op_ccts, gpu_op_placeholder_flags_all);
 
@@ -1057,7 +1057,7 @@ cupti_subscriber_callback
         cct_node_t *trace_ph = gpu_op_ccts_get(&gpu_op_ccts, gpu_placeholder_type_trace);
         gpu_cct_insert(trace_ph, kernel_ip);
 
-        hpcrun_safe_exit();
+        if (unsafe) hpcrun_safe_exit();
 
         gpu_correlation_channel_produce(gpu_api_correlation_id, &gpu_op_ccts, cpu_submit_time);
       }
@@ -1191,11 +1191,11 @@ cupti_subscriber_callback
 
           gpu_op_ccts_t gpu_op_ccts;
 
-          hpcrun_safe_enter();
+          int unsafe = hpcrun_safe_enter(); 
 
           gpu_op_ccts_insert(api_node, &gpu_op_ccts, gpu_op_placeholder_flags_all);
 
-          hpcrun_safe_exit();
+          if (unsafe) hpcrun_safe_exit();
 
           gpu_correlation_channel_produce(correlation_id, &gpu_op_ccts, cpu_submit_time);
         }
