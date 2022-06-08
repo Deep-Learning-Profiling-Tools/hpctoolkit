@@ -66,8 +66,8 @@ torch_monitor_start
 
   torch_monitor_logical_register(native_stack);
 
-  TORCH_MONITOR_CALL(torch_monitor_enable_domain, (TORCH_MONITOR_DOMAIN_FUNCTION));
-  TORCH_MONITOR_CALL(torch_monitor_enable_domain, (TORCH_MONITOR_DOMAIN_BACKWARD_FUNCTION));
+  TORCH_MONITOR_CALL(torch_monitor_domain_enable, (TORCH_MONITOR_DOMAIN_FUNCTION));
+  TORCH_MONITOR_CALL(torch_monitor_domain_enable, (TORCH_MONITOR_DOMAIN_BACKWARD_FUNCTION));
   TORCH_MONITOR_CALL(torch_monitor_callback_subscribe, (torch_monitor_callback));
   TORCH_MONITOR_CALL(torch_monitor_init, ());
 }
