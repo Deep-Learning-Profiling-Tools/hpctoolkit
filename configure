@@ -679,6 +679,11 @@ OPT_CUPTI_IFLAGS
 OPT_CUPTI
 OPT_ENABLE_CUPTI_FALSE
 OPT_ENABLE_CUPTI_TRUE
+OPT_TORCH_MONITOR_LDFLAGS
+OPT_TORCH_MONITOR_IFLAGS
+OPT_TORCH_MONITOR
+OPT_ENABLE_TORCH_MONITOR_FALSE
+OPT_ENABLE_TORCH_MONITOR_TRUE
 OPT_CUDA_LDFLAGS
 OPT_CUDA_IFLAGS
 OPT_HAVE_CUDA
@@ -1075,6 +1080,7 @@ enable_lush_pthreads
 with_python
 enable_xop
 with_cuda
+with_torch_monitor
 with_cupti
 with_opencl
 with_igc
@@ -1832,6 +1838,8 @@ Optional Packages:
   --with-cilk=PATH        use given (MIT) Cilk installation for LUSH agents
   --with-python=PATH      path to Python config tool (python-config)
   --with-cuda=PATH        path to cuda install directory
+  --with-torch-monitor=PATH
+                          path to torch_monitor install directory
   --with-cupti=PATH       path to cupti install directory, default is from
                           cuda
   --with-opencl=PATH      path to OpenCL install prefix; uses only include
@@ -23569,6 +23577,81 @@ _ACEOF
 
 
 #-------------------------------------------------
+# Option: --with-torch-monitor=PATH
+#-------------------------------------------------
+
+TORCH_MONITOR=no
+
+OPT_HAVE_TORCH_MONITOR=no
+OPT_TORCH_MONITOR_IFLAGS=
+OPT_TORCH_MONITOR_LDFLAGS=
+
+
+# Check whether --with-torch_monitor was given.
+if test "${with_torch_monitor+set}" = set; then :
+  withval=$with_torch_monitor; TORCH_MONITOR="$withval"
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for torch_monitor" >&5
+$as_echo_n "checking for torch_monitor... " >&6; }
+
+case "$TORCH_MONITOR" in
+  /* )
+    if test ! -f "${TORCH_MONITOR}/include/torch_monitor.h" ; then
+      as_fn_error $? "unable to find torch_monitor.h in: $TORCH_MONITOR" "$LINENO" 5
+    fi
+    OPT_TORCH_MONITOR_IFLAGS="-I${TORCH_MONITOR}/include"
+
+    for lib in $multilib_path ; do
+      if test -f "${TORCH_MONITOR}/${lib}/libtorch_monitor.so" ; then
+        OPT_TORCH_MONITOR_LDFLAGS="-L${TORCH_MONITOR}/$lib -Wl,-rpath=${TORCH_MONITOR}/$lib -ltorch_monitor"
+        break
+      fi
+    done
+    if test "x$OPT_TORCH_MONITOR_LDFLAGS" = x ; then
+      as_fn_error $? "unable to find libtorch_monitor.so in: $TORCH_MONITOR" "$LINENO" 5
+    fi
+    OPT_HAVE_TORCH_MONITOR=yes
+    ;;
+  no )
+    ;;
+  * )
+    as_fn_error $? "torch_monitor directory must be absolute path: $TORCH_MONITOR" "$LINENO" 5
+    ;;
+esac
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $TORCH_MONITOR" >&5
+$as_echo "$TORCH_MONITOR" >&6; }
+
+if test "$OPT_HAVE_TORCH_MONITOR" = yes ; then
+
+$as_echo "#define HAVE_TORCH_MONITOR_H 1" >>confdefs.h
+
+fi
+
+ if test "$OPT_HAVE_TORCH_MONITOR" = yes; then
+  OPT_ENABLE_TORCH_MONITOR_TRUE=
+  OPT_ENABLE_TORCH_MONITOR_FALSE='#'
+else
+  OPT_ENABLE_TORCH_MONITOR_TRUE='#'
+  OPT_ENABLE_TORCH_MONITOR_FALSE=
+fi
+
+
+OPT_TORCH_MONITOR="$TORCH_MONITOR"
+
+
+cat >>confdefs.h <<_ACEOF
+#define TORCH_MONITOR_INSTALL_PREFIX "$TORCH_MONITOR"
+_ACEOF
+
+
+
+
+
+
+#-------------------------------------------------
 # Option: --with-cupti=PATH
 #-------------------------------------------------
 
@@ -24953,6 +25036,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${OPT_ENABLE_CUDA_TRUE}" && test -z "${OPT_ENABLE_CUDA_FALSE}"; then
   as_fn_error $? "conditional \"OPT_ENABLE_CUDA\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${OPT_ENABLE_TORCH_MONITOR_TRUE}" && test -z "${OPT_ENABLE_TORCH_MONITOR_FALSE}"; then
+  as_fn_error $? "conditional \"OPT_ENABLE_TORCH_MONITOR\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${OPT_ENABLE_CUPTI_TRUE}" && test -z "${OPT_ENABLE_CUPTI_FALSE}"; then
@@ -27630,6 +27717,8 @@ $as_echo "$as_me:   cupti:        ${CUPTI}" >&6;}
 $as_echo "$as_me:   opencl:       ${OPENCL}" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:   level0:       ${OPT_LEVEL0}" >&5
 $as_echo "$as_me:   level0:       ${OPT_LEVEL0}" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:   torch_monitor:${TORCH_MONITOR}" >&5
+$as_echo "$as_me:   torch_monitor:${TORCH_MONITOR}" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:   igc:          ${IGC}" >&5
 $as_echo "$as_me:   igc:          ${IGC}" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}:   gtpin:        ${GTPIN}" >&5

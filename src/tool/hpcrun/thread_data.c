@@ -560,7 +560,7 @@ hpcrun_cached_bt_adjust_size
 frame_t*
 hpcrun_expand_btbuf
 (
-  void
+ void
 )
 {
   thread_data_t* td = hpcrun_get_thread_data();
