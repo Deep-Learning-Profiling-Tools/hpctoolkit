@@ -1,5 +1,5 @@
-#ifndef torch_monitor_api_h
-#define torch_monitor_api_h
+#ifndef TORCH_MONITOR_API_H
+#define TORCH_MONITOR_API_H
 
 #include <stdbool.h>
 
@@ -9,4 +9,4 @@ void torch_monitor_stop();
 
 bool torch_monitor_status_get();
 
-#endif  // torch_monitor_api_h
+#endif  // TORCH_MONITOR_API_H
