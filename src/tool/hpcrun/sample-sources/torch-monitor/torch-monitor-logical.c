@@ -17,7 +17,7 @@
 
 static bool torch_monitor_native_stack_enabled = false;
 
-static logical_metadata_store_t *torch_monitor_metadata = NULL;
+static logical_metadata_store_t torch_monitor_metadata;
 
 static __thread int python_module_id = TORCH_MONITOR_MODULE_ID_NULL;
 
@@ -32,12 +32,12 @@ int torch_monitor_python_module_id_get() {
 
 ip_normalized_t torch_monitor_function_ip(const char *function_name) {
   const char *metadata_path =
-      hpcrun_logical_metadata_path_get(torch_monitor_metadata);
+      hpcrun_logical_metadata_path_get(&torch_monitor_metadata);
   uint32_t fid =
-      hpcrun_logical_metadata_fid(torch_monitor_metadata, function_name,
+      hpcrun_logical_metadata_fid(&torch_monitor_metadata, function_name,
                                   LOGICAL_MANGLING_NONE, metadata_path, 0);
   ip_normalized_t ip_norm =
-      hpcrun_logical_metadata_ipnorm(torch_monitor_metadata, fid, 0);
+      hpcrun_logical_metadata_ipnorm(&torch_monitor_metadata, fid, 0);
 
   TORCH_MONITOR_MSG("function name %s metapath %s", function_name,
                     metadata_path);
@@ -91,11 +91,11 @@ static void python_callpath_unwind(torch_monitor_thread_obj_t *thread_obj,
   for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
     torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
     uint32_t fid = hpcrun_logical_metadata_fid(
-        torch_monitor_metadata, python_state->function_name,
+        &torch_monitor_metadata, python_state->function_name,
         LOGICAL_MANGLING_NONE, python_state->file_name,
         python_state->function_first_lineno);
     ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(
-        torch_monitor_metadata, fid, python_state->lineno);
+        &torch_monitor_metadata, fid, python_state->lineno);
 
     TORCH_MONITOR_MSG("file name %s function name %s->ip norm %u %p",
                       python_state->file_name, python_state->function_name,
