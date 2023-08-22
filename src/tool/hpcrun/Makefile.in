@@ -2224,7 +2224,6 @@ MY_AARCH64_FILES = \
 @OPT_ENABLE_LEVEL0_TRUE@libhpcrun_level0_la_LDFLAGS = -Wl,-Bsymbolic
 MY_UPC_FILES = sample-sources/upc.c
 MY_INCLUDE_DIRS = \
-<<<<<<< HEAD
 	-I$(top_srcdir)/src/tool       \
 	-I$(srcdir)/messages           \
 	-I$(srcdir)/fnbounds           \
@@ -2244,44 +2243,8 @@ MY_INCLUDE_DIRS = \
 	$(TBB_IFLAGS)                  \
 	$(OPENCL_IFLAGS)               \
 	$(OPT_CUDA_IFLAGS)             \
-	$(OPT_CUPTI_IFLAGS)
-=======
-        -I$(top_srcdir)/src/tool       \
-        -I$(srcdir)/messages           \
-        -I$(srcdir)/fnbounds           \
-        -I$(srcdir)/memory             \
-        -I$(srcdir)/os/linux           \
-        -I$(srcdir)/cct                \
-        -I$(srcdir)/ompt               \
-        -I$(srcdir)/unwind/common      \
-        -I$(srcdir)/utilities          \
-        $(HPC_IFLAGS)                  \
-        $(LIBUNWIND_IFLAGS)            \
-        $(OPT_GTPIN_IFLAGS)            \
-        $(ROCM_INC_FLGS)               \
-        -I$(LIBELF_INC)                \
-        -I$(LIBMONITOR_INC)            \
-        $(GOTCHA_IFLAGS)               \
-        $(TBB_IFLAGS)                  \
-        $(OPENCL_IFLAGS)               \
-        $(OPT_CUDA_IFLAGS)             \
-<<<<<<< HEAD
-<<<<<<< HEAD
-        $(OPT_CUPTI_IFLAGS)
-=======
-        $(OPT_CUPTI_IFLAGS)             \
-				$(OPT_TORCH_MONITOR_IFLAGS)    \
-		$(ROCM_INC_FLGS) \
-	-I$(LIBELF_INC)			\
-	-I$(LIBMONITOR_INC)	\
-	$(GOTCHA_IFLAGS)	\
-	$(OPENCL_IFLAGS)
->>>>>>> 0ee101039 (Compile through after integrating torch-monitor)
->>>>>>> d35727a3a (Compile through after integrating torch-monitor)
-=======
-        $(OPT_CUPTI_IFLAGS)            \
-				$(OPT_TORCH_MONITOR_IFLAGS)
->>>>>>> 78ae81ad8 (Fix makefile)
+	$(OPT_CUPTI_IFLAGS)            \
+	$(OPT_TORCH_MONITOR_IFLAGS)
 
 MY_MIPS_INCLUDE_DIRS = \
 	-I$(srcdir)/unwind/mips

@@ -35,9 +35,6 @@ static device_finalizer_fn_entry_t device_finalizer_shutdown;
 
 static void METHOD_FN(init) {
   self->state = INIT;
-
-  control_knob_register("HPCRUN_TORCH_MONITOR_NATIVE_STACK_ENABLE", "FALSE",
-                        ck_string);
 }
 
 static void METHOD_FN(thread_init) { TMSG(TORCH_MONITOR, "thread_init"); }

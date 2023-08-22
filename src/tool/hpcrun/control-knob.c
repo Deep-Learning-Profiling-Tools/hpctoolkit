@@ -51,6 +51,7 @@ control_knob_default_register(){
   control_knob_register("STREAMS_PER_TRACING_THREAD", "256", ck_int);
   control_knob_register("MAX_COMPLETION_CALLBACK_THREADS", "1000", ck_int);
   control_knob_register("MAX_UNWIND_DEPTH", "1000", ck_int);
+  control_knob_register("HPCRUN_TORCH_MONITOR_NATIVE_STACK_ENABLE", "FALSE", ck_string);
 }
 
 
@@ -122,7 +123,7 @@ control_knob_value_get_string(char *in, char **value)
       *value = iter->value;
       return 0;
     }else{
-      fprintf(stderr,"Control register type is not string.\n");
+      fprintf(stderr,"Control register type is not string\n");
       return 1;
     }
   }
