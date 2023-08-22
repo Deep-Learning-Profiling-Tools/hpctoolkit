@@ -436,8 +436,7 @@ MY_BASE_FILES =				\
 	gpu/blame-shifting/blame-helper.c \
 	gpu/blame-shifting/blame-queue-map.c	\
 	gpu/blame-shifting/blame-kernel-map.c	\
-	gpu/blame-shifting/active-kernels-map.c \
-	logical-metadata.h logical-metadata.c
+	gpu/blame-shifting/active-kernels-map.c
 
 # 	gpu/gpu-api.c
 #	trampoline/common/trampoline.c

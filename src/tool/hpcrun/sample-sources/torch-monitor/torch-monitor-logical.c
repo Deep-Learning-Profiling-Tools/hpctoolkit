@@ -1,6 +1,6 @@
 #include "torch-monitor-logical.h"
 
-#include <hpcrun/logical-metadata.h>
+#include <hpcrun/logical/common.h>
 #include <hpcrun/cct_backtrace_finalize.h>
 #include <hpcrun/cct_insert_backtrace.h>
 #include <hpcrun/safe-sampling.h>
@@ -41,7 +41,8 @@ torch_monitor_function_ip
 )
 {
   const char *metadata_path = hpcrun_logical_metadata_path_get(torch_monitor_metadata);
-  uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata, function_name, metadata_path, 0);
+  uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata, function_name,
+    LOGICAL_MANGLING_NONE, metadata_path, 0);
   ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata, fid, 0);
 
   TORCH_MONITOR_MSG("function name %s metapath %s", function_name, metadata_path);
@@ -116,7 +117,7 @@ python_callpath_unwind
   for (i = 0; i < thread_obj->python_cur_num_states; ++i) {
     torch_monitor_python_state_t *python_state = &thread_obj->python_states[i];
     uint32_t fid = hpcrun_logical_metadata_fid(torch_monitor_metadata, python_state->function_name,
-      python_state->file_name, python_state->function_first_lineno);
+      LOGICAL_MANGLING_NONE, python_state->file_name, python_state->function_first_lineno);
     ip_normalized_t ip_norm = hpcrun_logical_metadata_ipnorm(torch_monitor_metadata,
       fid, python_state->lineno);
 
@@ -382,7 +383,6 @@ torch_monitor_logical_unregister
   TORCH_MONITOR_MSG("Enter torch_monitor_logical_unregister");
 
   torch_monitor_native_stack_enabled = false;
-  hpcrun_logical_metadata_cleanup(torch_monitor_metadata);
 
   TORCH_MONITOR_MSG("Exit torch_monitor_logical_unregister");
 }

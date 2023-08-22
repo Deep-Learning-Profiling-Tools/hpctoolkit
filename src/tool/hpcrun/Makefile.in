@@ -525,8 +525,8 @@ am__libhpcrun_la_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	gpu/blame-shifting/blame.c gpu/blame-shifting/blame-helper.c \
 	gpu/blame-shifting/blame-queue-map.c \
 	gpu/blame-shifting/blame-kernel-map.c \
-	gpu/blame-shifting/active-kernels-map.c logical-metadata.h \
-	logical-metadata.c trampoline/common/trampoline_eager.c \
+	gpu/blame-shifting/active-kernels-map.c \
+	trampoline/common/trampoline_eager.c \
 	trampoline/common/trampoline_lazy.c \
 	sample-sources/perf/event_custom.c \
 	sample-sources/perf/linux_perf.c \
@@ -752,9 +752,9 @@ am__objects_14 = utilities/libhpcrun_la-first_func.lo \
 	gpu/blame-shifting/libhpcrun_la-blame-queue-map.lo \
 	gpu/blame-shifting/libhpcrun_la-blame-kernel-map.lo \
 	gpu/blame-shifting/libhpcrun_la-active-kernels-map.lo \
-	libhpcrun_la-logical-metadata.lo $(am__objects_7) \
-	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
-	$(am__objects_11) $(am__objects_12) $(am__objects_13)
+	$(am__objects_7) $(am__objects_8) $(am__objects_9) \
+	$(am__objects_10) $(am__objects_11) $(am__objects_12) \
+	$(am__objects_13)
 @OPT_ENABLE_GTPIN_TRUE@am__objects_15 = gpu/intel/gtpin/libhpcrun_la-gtpin-shim.lo
 am__objects_16 = fnbounds/libhpcrun_la-fnbounds_client.lo \
 	fnbounds/libhpcrun_la-fnbounds_dynamic.lo \
@@ -1101,8 +1101,8 @@ am__libhpcrun_o_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	gpu/blame-shifting/blame.c gpu/blame-shifting/blame-helper.c \
 	gpu/blame-shifting/blame-queue-map.c \
 	gpu/blame-shifting/blame-kernel-map.c \
-	gpu/blame-shifting/active-kernels-map.c logical-metadata.h \
-	logical-metadata.c trampoline/common/trampoline_eager.c \
+	gpu/blame-shifting/active-kernels-map.c \
+	trampoline/common/trampoline_eager.c \
 	trampoline/common/trampoline_lazy.c \
 	sample-sources/perf/event_custom.c \
 	sample-sources/perf/linux_perf.c \
@@ -1314,9 +1314,9 @@ am__objects_60 = utilities/libhpcrun_o-first_func.$(OBJEXT) \
 	gpu/blame-shifting/libhpcrun_o-blame-queue-map.$(OBJEXT) \
 	gpu/blame-shifting/libhpcrun_o-blame-kernel-map.$(OBJEXT) \
 	gpu/blame-shifting/libhpcrun_o-active-kernels-map.$(OBJEXT) \
-	libhpcrun_o-logical-metadata.$(OBJEXT) $(am__objects_53) \
-	$(am__objects_54) $(am__objects_55) $(am__objects_56) \
-	$(am__objects_57) $(am__objects_58) $(am__objects_59)
+	$(am__objects_53) $(am__objects_54) $(am__objects_55) \
+	$(am__objects_56) $(am__objects_57) $(am__objects_58) \
+	$(am__objects_59)
 am__objects_61 = fnbounds/libhpcrun_o-fnbounds_static.$(OBJEXT) \
 	libhpcrun_o-custom-init-static.$(OBJEXT)
 am__objects_62 = unwind/common/libhpcrun_o-default_validation_summary.$(OBJEXT)
@@ -2104,10 +2104,9 @@ MY_BASE_FILES = utilities/first_func.c main.h main.c disabled.c \
 	gpu/blame-shifting/blame.c gpu/blame-shifting/blame-helper.c \
 	gpu/blame-shifting/blame-queue-map.c \
 	gpu/blame-shifting/blame-kernel-map.c \
-	gpu/blame-shifting/active-kernels-map.c logical-metadata.h \
-	logical-metadata.c $(am__append_8) $(am__append_9) \
-	$(am__append_10) $(am__append_12) $(am__append_13) \
-	$(am__append_14) $(am__append_15)
+	gpu/blame-shifting/active-kernels-map.c $(am__append_8) \
+	$(am__append_9) $(am__append_10) $(am__append_12) \
+	$(am__append_13) $(am__append_14) $(am__append_15)
 MY_DYNAMIC_FILES = fnbounds/fnbounds_client.c \
 	fnbounds/fnbounds_dynamic.c monitor-exts/openmp.c \
 	custom-init-dynamic.c $(am__append_19)
@@ -4349,7 +4348,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_la-hpcrun_signals.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_la-hpcrun_stats.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_la-loadmap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_la-logical-metadata.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_la-main.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_la-metrics.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_la-module-ignore-map.Plo@am__quote@
@@ -4389,7 +4387,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_o-hpcrun_signals.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_o-hpcrun_stats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_o-loadmap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_o-logical-metadata.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_o-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_o-metrics.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhpcrun_o-module-ignore-map.Po@am__quote@
@@ -6028,13 +6025,6 @@ gpu/blame-shifting/libhpcrun_la-active-kernels-map.lo: gpu/blame-shifting/active
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gpu/blame-shifting/active-kernels-map.c' object='gpu/blame-shifting/libhpcrun_la-active-kernels-map.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o gpu/blame-shifting/libhpcrun_la-active-kernels-map.lo `test -f 'gpu/blame-shifting/active-kernels-map.c' || echo '$(srcdir)/'`gpu/blame-shifting/active-kernels-map.c
-
-libhpcrun_la-logical-metadata.lo: logical-metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT libhpcrun_la-logical-metadata.lo -MD -MP -MF $(DEPDIR)/libhpcrun_la-logical-metadata.Tpo -c -o libhpcrun_la-logical-metadata.lo `test -f 'logical-metadata.c' || echo '$(srcdir)/'`logical-metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libhpcrun_la-logical-metadata.Tpo $(DEPDIR)/libhpcrun_la-logical-metadata.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='logical-metadata.c' object='libhpcrun_la-logical-metadata.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o libhpcrun_la-logical-metadata.lo `test -f 'logical-metadata.c' || echo '$(srcdir)/'`logical-metadata.c
 
 trampoline/common/libhpcrun_la-trampoline_eager.lo: trampoline/common/trampoline_eager.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT trampoline/common/libhpcrun_la-trampoline_eager.lo -MD -MP -MF trampoline/common/$(DEPDIR)/libhpcrun_la-trampoline_eager.Tpo -c -o trampoline/common/libhpcrun_la-trampoline_eager.lo `test -f 'trampoline/common/trampoline_eager.c' || echo '$(srcdir)/'`trampoline/common/trampoline_eager.c
@@ -8905,20 +8895,6 @@ gpu/blame-shifting/libhpcrun_o-active-kernels-map.obj: gpu/blame-shifting/active
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gpu/blame-shifting/active-kernels-map.c' object='gpu/blame-shifting/libhpcrun_o-active-kernels-map.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o gpu/blame-shifting/libhpcrun_o-active-kernels-map.obj `if test -f 'gpu/blame-shifting/active-kernels-map.c'; then $(CYGPATH_W) 'gpu/blame-shifting/active-kernels-map.c'; else $(CYGPATH_W) '$(srcdir)/gpu/blame-shifting/active-kernels-map.c'; fi`
-
-libhpcrun_o-logical-metadata.o: logical-metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT libhpcrun_o-logical-metadata.o -MD -MP -MF $(DEPDIR)/libhpcrun_o-logical-metadata.Tpo -c -o libhpcrun_o-logical-metadata.o `test -f 'logical-metadata.c' || echo '$(srcdir)/'`logical-metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libhpcrun_o-logical-metadata.Tpo $(DEPDIR)/libhpcrun_o-logical-metadata.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='logical-metadata.c' object='libhpcrun_o-logical-metadata.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o libhpcrun_o-logical-metadata.o `test -f 'logical-metadata.c' || echo '$(srcdir)/'`logical-metadata.c
-
-libhpcrun_o-logical-metadata.obj: logical-metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT libhpcrun_o-logical-metadata.obj -MD -MP -MF $(DEPDIR)/libhpcrun_o-logical-metadata.Tpo -c -o libhpcrun_o-logical-metadata.obj `if test -f 'logical-metadata.c'; then $(CYGPATH_W) 'logical-metadata.c'; else $(CYGPATH_W) '$(srcdir)/logical-metadata.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libhpcrun_o-logical-metadata.Tpo $(DEPDIR)/libhpcrun_o-logical-metadata.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='logical-metadata.c' object='libhpcrun_o-logical-metadata.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o libhpcrun_o-logical-metadata.obj `if test -f 'logical-metadata.c'; then $(CYGPATH_W) 'logical-metadata.c'; else $(CYGPATH_W) '$(srcdir)/logical-metadata.c'; fi`
 
 trampoline/common/libhpcrun_o-trampoline_eager.o: trampoline/common/trampoline_eager.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT trampoline/common/libhpcrun_o-trampoline_eager.o -MD -MP -MF trampoline/common/$(DEPDIR)/libhpcrun_o-trampoline_eager.Tpo -c -o trampoline/common/libhpcrun_o-trampoline_eager.o `test -f 'trampoline/common/trampoline_eager.c' || echo '$(srcdir)/'`trampoline/common/trampoline_eager.c
