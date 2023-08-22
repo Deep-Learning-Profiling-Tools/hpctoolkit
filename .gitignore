@@ -3,3 +3,4 @@ __pycache__/
 !.gitlab-ci.yml
 !/.pre-commit-config.yaml
 !.prospector.yaml
+.vscode
