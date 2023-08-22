@@ -4579,6 +4579,66 @@ AC_SUBST([OPT_CUDA_IFLAGS])
 AC_SUBST([OPT_CUDA_LDFLAGS])
 
 #-------------------------------------------------
+# Option: --with-torch-monitor=PATH
+#-------------------------------------------------
+
+TORCH_MONITOR=no
+
+OPT_HAVE_TORCH_MONITOR=no
+OPT_TORCH_MONITOR_IFLAGS=
+OPT_TORCH_MONITOR_LDFLAGS=
+
+AC_ARG_WITH([torch_monitor],
+  [AS_HELP_STRING([--with-torch-monitor=PATH],
+      [path to torch_monitor install directory])],
+  [TORCH_MONITOR="$withval"],
+  [])
+
+AC_MSG_CHECKING([for torch_monitor])
+
+case "$TORCH_MONITOR" in
+  /* )
+    if test ! -f "${TORCH_MONITOR}/include/torch_monitor.h" ; then
+      AC_MSG_ERROR([unable to find torch_monitor.h in: $TORCH_MONITOR])
+    fi
+    OPT_TORCH_MONITOR_IFLAGS="-I${TORCH_MONITOR}/include"
+
+    for lib in $multilib_path ; do
+      if test -f "${TORCH_MONITOR}/${lib}/libtorch_monitor.so" ; then
+        OPT_TORCH_MONITOR_LDFLAGS="-L${TORCH_MONITOR}/$lib -Wl,-rpath=${TORCH_MONITOR}/$lib -ltorch_monitor"
+        break
+      fi
+    done
+    if test "x$OPT_TORCH_MONITOR_LDFLAGS" = x ; then
+      AC_MSG_ERROR([unable to find libtorch_monitor.so in: $TORCH_MONITOR])
+    fi
+    OPT_HAVE_TORCH_MONITOR=yes
+    ;;
+  no )
+    ;;
+  * )
+    AC_MSG_ERROR([torch_monitor directory must be absolute path: $TORCH_MONITOR])
+    ;;
+esac
+
+AC_MSG_RESULT([$TORCH_MONITOR])
+
+if test "$OPT_HAVE_TORCH_MONITOR" = yes ; then
+  AC_DEFINE([HAVE_TORCH_MONITOR_H], [1], [The <torch_monitor.h> header file is available.])
+fi
+
+AM_CONDITIONAL([OPT_ENABLE_TORCH_MONITOR], [test "$OPT_HAVE_TORCH_MONITOR" = yes])
+
+OPT_TORCH_MONITOR="$TORCH_MONITOR"
+
+AC_DEFINE_UNQUOTED([TORCH_MONITOR_INSTALL_PREFIX],
+  ["$TORCH_MONITOR"], ["TORCH_MONITOR install prefix"])
+
+AC_SUBST([OPT_TORCH_MONITOR])
+AC_SUBST([OPT_TORCH_MONITOR_IFLAGS])
+AC_SUBST([OPT_TORCH_MONITOR_LDFLAGS])
+
+#-------------------------------------------------
 # Option: --with-cupti=PATH
 #-------------------------------------------------
 
@@ -5593,6 +5653,7 @@ AC_MSG_NOTICE([  cuda:         ${CUDA}])
 AC_MSG_NOTICE([  cupti:        ${CUPTI}])
 AC_MSG_NOTICE([  opencl:       ${OPENCL}])
 AC_MSG_NOTICE([  level0:       ${OPT_LEVEL0}])
+AC_MSG_NOTICE([  torch_monitor:${TORCH_MONITOR}])
 AC_MSG_NOTICE([  igc:          ${IGC}])
 AC_MSG_NOTICE([  gtpin:        ${GTPIN}])
 AC_MSG_NOTICE([  metrics-discovery: ${METRICS_DISCOVERY}])

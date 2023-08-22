@@ -83,6 +83,9 @@ static const char phname_gpu_sync[]    = "<gpu sync>";
 static const char phname_gpu_kernel[]  = "<gpu kernel>";
 static const char phname_gpu_memset[]  = "<gpu memset>";
 
+static const char phname_torch_monitor_forward[]  = "<forward>";
+static const char phname_torch_monitor_backward[] = "<backward>";
+
 //*****************************************************************************
 // interface operations
 //*****************************************************************************
@@ -139,6 +142,10 @@ get_placeholder_name(uint64_t placeholder) {
     return phname_gpu_sync;
   case hpcrun_placeholder_gpu_trace:
     return phname_gpu_kernel;
+  case hpcrun_placeholder_torch_monitor_forward:
+    return phname_torch_monitor_forward;
+  case hpcrun_placeholder_torch_monitor_backward:
+    return phname_torch_monitor_backward;
   case hpcrun_placeholder_ompt_tgt_none:
     // Not in NameMappings.cpp
     return NULL;

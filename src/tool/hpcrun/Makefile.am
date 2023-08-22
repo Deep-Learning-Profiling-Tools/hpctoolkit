@@ -163,6 +163,8 @@ XED2_INC = @XED2_INC@
 XED2_HPCRUN_LIBS =  @XED2_HPCRUN_LIBS@
 XED2_HPCLINK_LIBS = @XED2_HPCLINK_LIBS@
 CUPTI_INC_FLGS = @OPT_CUPTI_IFLAGS@
+TORCH_MONITOR_INC_FLGS = @OPT_TORCH_MONITOR_IFLAGS@
+TORCH_MONITOR_LD_FLGS = @OPT_TORCH_MONITOR_LDFLAGS@
 
 ROCM_INC_FLGS = @OPT_ROCM_IFLAGS@
 
@@ -529,6 +531,15 @@ if OPT_PAPI_CUPTI
 MY_PAPI_FILES += sample-sources/papi-c-cupti.c
 endif
 
+if OPT_ENABLE_TORCH_MONITOR
+MY_TORCH_MONITOR_FILES = sample-sources/torch-monitor/torch-monitor-api.c	\
+  sample-sources/torch-monitor/torch-monitor-logical.c	\
+  sample-sources/torch-monitor/torch-monitor-thread-obj.c	\
+  sample-sources/torch-monitor/torch-monitor-function-cct-map.c	\
+  sample-sources/torch-monitor/torch-monitor-op-placeholders.c	\
+  sample-sources/torch-monitor/torch-monitor.c
+endif
+
 if OPT_ENABLE_CUPTI
 MY_CUPTI_FILES = sample-sources/nvidia.c	\
 	gpu/nvidia/cubin-id-map.c		\
@@ -645,8 +656,8 @@ MY_INCLUDE_DIRS =   \
 	$(TBB_IFLAGS)                  \
 	$(OPENCL_IFLAGS)               \
 	$(OPT_CUDA_IFLAGS)             \
-	$(OPT_CUPTI_IFLAGS)
-
+	$(OPT_CUPTI_IFLAGS)            \
+	$(OPT_TORCH_MONITOR_IFLAGS)
 
 MY_MIPS_INCLUDE_DIRS = \
 	-I$(srcdir)/unwind/mips
@@ -1036,6 +1047,16 @@ libhpcrun_la_CPPFLAGS += $(PAPI_INC_FLGS)
 libhpcrun_la_LDFLAGS  += $(PAPI_LD_FLGS)
 
 MY_CPP_DEFINES  += -DHPCRUN_SS_PAPI
+endif
+
+if OPT_ENABLE_TORCH_MONITOR
+  libhpcrun_la_SOURCES  += $(MY_TORCH_MONITOR_FILES)
+  libhpcrun_o_SOURCES   += $(MY_TORCH_MONITOR_FILES)
+  libhpcrun_la_CPPFLAGS += -DTORCH_MONITOR_ENABLE $(TORCH_MONITOR_INC_FLGS)
+	libhpcrun_la_CFLAGS += -DTORCH_MONITOR_ENABLE $(TORCH_MONITOR_INC_FLGS)
+  libhpcrun_la_LDFLAGS  += $(TORCH_MONITOR_LD_FLGS)
+
+  MY_CPP_DEFINES  += -DHPCRUN_SS_TORCH_MONITOR
 endif
 
 if OPT_ENABLE_CUPTI

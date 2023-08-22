@@ -554,6 +554,13 @@ uint32_t hpcrun_logical_metadata_fid(logical_metadata_store_t* store,
   return entry->id;
 }
 
+const char *hpcrun_logical_metadata_path_get(logical_metadata_store_t *store) {
+  if (store == NULL) {
+  	return NULL;
+  }
+  return store->path;
+}
+
 static void cleanup_metadata_store(logical_metadata_store_t* store) {
   FILE* f = fopen(store->path, "wb");
   if(f == NULL) return;

@@ -467,6 +467,9 @@ static inline ip_normalized_t hpcrun_logical_metadata_ipnorm(
   return ip;
 }
 
+/// Get metadata's path
+extern const char *hpcrun_logical_metadata_path_get(logical_metadata_store_t *store);
+
 // --------------------------------------
 // Hook registration functions
 // --------------------------------------

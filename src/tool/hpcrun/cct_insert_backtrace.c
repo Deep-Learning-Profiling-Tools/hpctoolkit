@@ -75,7 +75,6 @@
 #include "thread_data.h"
 #include "utilities/ip-normalized.h"
 
-
 //
 // Misc externals (not in an include file)
 //
