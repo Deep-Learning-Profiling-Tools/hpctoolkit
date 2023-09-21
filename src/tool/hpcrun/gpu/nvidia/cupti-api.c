@@ -1320,7 +1320,7 @@ cupti_buffer_completion_callback
     do {
       status = cupti_buffer_cursor_advance(buffer, validSize, &cupti_activity);
       if (status) {
-                                cupti_activity_process(cupti_activity);
+        cupti_activity_process(cupti_activity);
         ++processed;
       }
     } while (status);
