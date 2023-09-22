@@ -359,26 +359,28 @@ METHOD_FN(process_event_list, int lush_metrics)
   hpcrun_extract_ev_thresh(event, sizeof(nvidia_name), nvidia_name,
     &frequency, frequency_default);
 
-        for (; event != NULL; event = next_tok()) {
-                if (hpcrun_ev_is(event, NVIDIA_CUDA)) {
-                        trace_frequency =
-                        (frequency == frequency_default) ? trace_frequency_default : frequency;
-                        gpu_monitoring_trace_sample_frequency_set(trace_frequency);
-                } else if (hpcrun_ev_is(event, NVIDIA_CUDA_PC_SAMPLING)) {
-                        pc_sampling_frequency = (frequency == frequency_default) ?
-                                                                                                                        pc_sampling_frequency_default : frequency;
+  for (; event != NULL; event = next_tok()) {
+    if (hpcrun_ev_is(event, NVIDIA_CUDA)) {
+      trace_frequency = (frequency == frequency_default)
+                            ? trace_frequency_default
+                            : frequency;
+      gpu_monitoring_trace_sample_frequency_set(trace_frequency);
+    } else if (hpcrun_ev_is(event, NVIDIA_CUDA_PC_SAMPLING)) {
+      pc_sampling_frequency = (frequency == frequency_default)
+                                  ? pc_sampling_frequency_default
+                                  : frequency;
 
-                        gpu_monitoring_instruction_sample_frequency_set(pc_sampling_frequency);
+      gpu_monitoring_instruction_sample_frequency_set(pc_sampling_frequency);
 
-                        gpu_metrics_GPU_INST_enable(); // instruction counts
+      gpu_metrics_GPU_INST_enable();  // instruction counts
 
-                        gpu_metrics_GPU_INST_STALL_enable(); // stall metrics
+      gpu_metrics_GPU_INST_STALL_enable();  // stall metrics
 
-    gpu_metrics_GSAMP_enable(); // GPU utilization from sampling
+      gpu_metrics_GSAMP_enable();  // GPU utilization from sampling
 
-    // pc sampling cannot be on with concurrent kernels
-    kernel_invocation_activities[0] = CUPTI_ACTIVITY_KIND_KERNEL;
-    }   else if (hpcrun_ev_is(event, NVIDIA_CUDA_NV_LINK)) {
+      // pc sampling cannot be on with concurrent kernels
+      kernel_invocation_activities[0] = CUPTI_ACTIVITY_KIND_KERNEL;
+    } else if (hpcrun_ev_is(event, NVIDIA_CUDA_NV_LINK)) {
       gpu_metrics_GXFER_enable();
     }
   }
