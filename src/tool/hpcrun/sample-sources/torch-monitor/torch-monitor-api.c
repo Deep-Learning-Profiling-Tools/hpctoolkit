@@ -27,8 +27,7 @@ static bool torch_monitor_enabled = false;
 
 bool torch_monitor_status_get(void) { return torch_monitor_enabled; }
 
-static cct_node_t *forward_forward_cct_lookup(
-    torch_monitor_thread_obj_t *thread_obj, cct_node_t *cct) {
+static cct_node_t *forward_forward_cct_lookup(cct_node_t *cct) {
   // Upward until find the forward cct node
   while (cct != NULL) {
     cct_addr_t *addr = hpcrun_cct_addr(cct);
@@ -78,30 +77,38 @@ static void forward_function_callback(
 
   thread_obj->thread_state |= TORCH_MONITOR_THREAD_STATE_FORWARD;
 
-  TORCH_MONITOR_MSG("Enter forward level %u state %p function %s", nested_level,
-                    thread_obj->thread_state, function_name);
+  TORCH_MONITOR_MSG("Enter forward level %u state %p function %s sequence_number %d", nested_level,
+                    thread_obj->thread_state, function_name, sequence_number);
 
-  if (sequence_number == -1 || nested_level != 0) {
+  if (nested_level == 0) {
+    // nested_level == 0: This op is the entry to aten,
+    // all subsequent ops should have use a different cache
+    cached_cct_cleanup(thread_obj);
+  }
+
+  if (sequence_number == -1) {
     // sequence_number == -1: This op may not have a corresponding backward call
-    // nested_level != 0: This op isn't the entry to aten
     return;
   }
 
-  cached_cct_cleanup(thread_obj);
-
-  // Sebsequent calls are forward functions
-  thread_obj->domain = TORCH_MONITOR_DOMAIN_FUNCTION;
-  // Save function ip_norm so future unwinding can use ip_norm to add a function
-  // node
-  thread_obj->function_ip_norm = torch_monitor_function_ip(function_name);
-  // Get the function cct using unwinding
-  cct_node_t *cct = forward_cct_get(thread_obj);
-  cct_node_t *forward_cct = forward_forward_cct_lookup(thread_obj, cct);
-  cct_node_t *function_cct = hpcrun_cct_parent(forward_cct);
-
-  if (torch_monitor_native_stack_status_get()) {
-    // In the native mode, prev_cct can only be cached after unwinding is done
-    thread_obj->prev_cct = forward_cct;
+  cct_node_t *function_cct = NULL;
+  if (thread_obj->prev_cct == NULL) {
+    // Sebsequent calls are forward functions
+    thread_obj->domain = TORCH_MONITOR_DOMAIN_FUNCTION;
+    // Save function ip_norm so future unwinding can use ip_norm to add a function
+    // node
+    thread_obj->function_ip_norm = torch_monitor_function_ip(function_name);
+    // Get the function cct using unwinding
+    cct_node_t *cct = forward_cct_get(thread_obj);
+    cct_node_t *forward_cct = forward_forward_cct_lookup(cct);
+    if (torch_monitor_native_stack_status_get()) {
+      // XXX(Keren): rethink the native mode
+      // In the native mode, prev_cct can only be cached after unwinding is done
+      thread_obj->prev_cct = forward_cct;
+    }
+    function_cct = hpcrun_cct_parent(forward_cct);
+  } else {
+    function_cct = hpcrun_cct_parent(thread_obj->prev_cct);
   }
 
   // A node in a computation graph can be without backward operations.
@@ -142,15 +149,13 @@ static void backward_function_callback(
 
   thread_obj->thread_state |= TORCH_MONITOR_THREAD_STATE_BACKWARD;
 
-  TORCH_MONITOR_MSG("Enter backward level %u state %p", nested_level,
-                    thread_obj->thread_state);
+  TORCH_MONITOR_MSG("Enter backward level %u state %p sequence_number %d", nested_level,
+                    thread_obj->thread_state, sequence_number);
 
   if (sequence_number == -1) {
     // This op may not have a corresponding backward call
     return;
   }
-
-  cached_cct_cleanup(thread_obj);
 
   // Overwrite forward domain, even upcoming forward calls are in the backward
   // domain
