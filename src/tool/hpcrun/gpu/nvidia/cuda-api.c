@@ -56,6 +56,8 @@
 // system include files
 //*****************************************************************************
 
+#include <sys/stat.h>
+
 #include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>    // memset
@@ -78,6 +80,8 @@
 //*****************************************************************************
 // macros
 //*****************************************************************************
+
+#define CUDART_LIBRARY_LOCATION "/lib64/libcudart.so"
 
 #define CUDA_FN_NAME(f) DYN_FN_NAME(f)
 
@@ -216,23 +220,71 @@ CUDA_RUNTIME_FN
 // private operations
 //******************************************************************************
 
+#ifndef HPCRUN_STATIC_LINK
+static int
+library_path_resolves(const char *buffer)
+{
+  struct stat sb;
+  return stat(buffer, &sb) == 0;
+}
+
+static const char *
+libcuda_path(const char *manual_libcuda_path)
+{
+  const char *path = "libcuda.so";
+  if (manual_libcuda_path) {
+    if (library_path_resolves(manual_libcuda_path)) {
+      path = manual_libcuda_path;
+    } else {
+      fprintf(stderr, "NOTE: Unable to resolve libcuda.so path %s.\n",
+              manual_libcuda_path);
+    }
+  }
+  return path;
+}
+
+static const char *
+libcudart_path(const char *manual_cuda_path)
+{
+  const char *path = "libcudart.so";
+  if (manual_cuda_path) {
+    static char buffer[PATH_MAX];
+    buffer[0] = 0;
+    strcat(buffer, manual_cuda_path);
+    if (strlen(buffer) > 0 && buffer[strlen(buffer) - 1] == '/') {
+      buffer[strlen(buffer) - 1] = 0; // remove trailing slash
+    }
+    strcat(buffer, CUDART_LIBRARY_LOCATION);
+    if (library_path_resolves(buffer)) {
+      path = buffer;
+    } else {
+      fprintf(stderr, "NOTE: Unable to resolve libcudart.so path %s.\n",
+              buffer);
+    }
+  }
+  return path;
+}
+
+#endif
+
 
 int
 cuda_bind
 (
-  void
+ char* manual_libcuda_path,
+ char* manual_cuda_path
 )
 {
 #ifndef HPCRUN_STATIC_LINK
   // dynamic libraries only availabile in non-static case
-  CHK_DLOPEN(cuda, "libcuda.so", RTLD_NOW | RTLD_GLOBAL);
+  CHK_DLOPEN(cuda, libcuda_path(manual_libcuda_path), RTLD_NOW | RTLD_GLOBAL);
 
   CHK_DLSYM(cuda, cuDeviceGetAttribute);
   CHK_DLSYM(cuda, cuCtxGetCurrent);
   CHK_DLSYM(cuda, cuFuncGetModule);
   CHK_DLSYM(cuda, cuDriverGetVersion);
 
-  CHK_DLOPEN(cudart, "libcudart.so", RTLD_NOW | RTLD_GLOBAL);
+  CHK_DLOPEN(cudart, libcudart_path(manual_cuda_path), RTLD_NOW | RTLD_GLOBAL);
 
   CHK_DLSYM(cudart, cudaGetDevice);
   CHK_DLSYM(cudart, cudaRuntimeGetVersion);

@@ -102,6 +102,9 @@
 #define NVIDIA_CUDA "gpu=nvidia"
 #define NVIDIA_CUDA_PC_SAMPLING "gpu=nvidia,pc"
 #define NVIDIA_CUDA_NV_LINK "nvlink"
+#define NVIDIA_LIBCUDA_PATH_PREFIX "gpu=nvidia,libcuda_path="
+#define NVIDIA_CUDA_PATH_PREFIX "gpu=nvidia,cuda_path="
+#define NVIDIA_LIBCUPIT_PATH_PREFIX "gpu=nvidia,libcupti_path="
 
 
 /******************************************************************************
@@ -315,13 +318,16 @@ METHOD_FN(shutdown)
   self->state = UNINIT;
 }
 
-
 static bool
 METHOD_FN(supports_event, const char *ev_str)
 {
 #ifndef HPCRUN_STATIC_LINK
-  return hpcrun_ev_is(ev_str, NVIDIA_CUDA) || hpcrun_ev_is(ev_str, NVIDIA_CUDA_PC_SAMPLING)
-                                                                                                                                                                                        || hpcrun_ev_is(ev_str, NVIDIA_CUDA_NV_LINK);
+  return hpcrun_ev_is(ev_str, NVIDIA_CUDA) ||
+         hpcrun_ev_is(ev_str, NVIDIA_CUDA_PC_SAMPLING) ||
+         hpcrun_ev_is(ev_str, NVIDIA_CUDA_NV_LINK) ||
+         strstr(ev_str, NVIDIA_LIBCUDA_PATH_PREFIX) ||
+         strstr(ev_str, NVIDIA_CUDA_PATH_PREFIX) ||
+         strstr(ev_str, NVIDIA_LIBCUPIT_PATH_PREFIX);
 #else
   return false;
 #endif
@@ -355,6 +361,11 @@ METHOD_FN(process_event_list, int lush_metrics)
   char* event = start_tok(evlist);
   long int frequency = 0;
   int frequency_default = -1;
+#ifndef HPCRUN_STATIC_LINK
+  char libcuda_path[PATH_MAX] = {0};
+  char cuda_path[PATH_MAX] = {0};
+  char libcupti_path[PATH_MAX] = {0};
+#endif
 
   hpcrun_extract_ev_thresh(event, sizeof(nvidia_name), nvidia_name,
     &frequency, frequency_default);
@@ -382,6 +393,18 @@ METHOD_FN(process_event_list, int lush_metrics)
       kernel_invocation_activities[0] = CUPTI_ACTIVITY_KIND_KERNEL;
     } else if (hpcrun_ev_is(event, NVIDIA_CUDA_NV_LINK)) {
       gpu_metrics_GXFER_enable();
+    } else if (strstr(event, NVIDIA_LIBCUDA_PATH_PREFIX)) {
+#ifndef HPCRUN_STATIC_LINK
+      strcpy(libcuda_path, event + strlen(NVIDIA_LIBCUDA_PATH_PREFIX));
+#endif
+    } else if (strstr(event, NVIDIA_CUDA_PATH_PREFIX)) {
+#ifndef HPCRUN_STATIC_LINK
+      strcpy(cuda_path, event + strlen(NVIDIA_CUDA_PATH_PREFIX));
+#endif
+    } else if (strstr(event, NVIDIA_LIBCUPIT_PATH_PREFIX)) {
+#ifndef HPCRUN_STATIC_LINK
+      strcpy(libcupti_path, event + strlen(NVIDIA_LIBCUPIT_PATH_PREFIX));
+#endif
     }
   }
 
@@ -389,12 +412,14 @@ METHOD_FN(process_event_list, int lush_metrics)
   gpu_metrics_KINFO_enable();
 
 #ifndef HPCRUN_STATIC_LINK
-  if (cuda_bind() != DYNAMIC_BINDING_STATUS_OK) {
+  if (cuda_bind(strlen(libcuda_path) > 0 ? libcuda_path : NULL,
+                strlen(cuda_path) > 0 ? cuda_path : NULL) != DYNAMIC_BINDING_STATUS_OK) {
     EEMSG("hpcrun: unable to bind to NVIDIA CUDA library %s\n", dlerror());
     monitor_real_exit(-1);
   }
 
-  if (cupti_bind() != DYNAMIC_BINDING_STATUS_OK) {
+  if (cupti_bind(strlen(libcupti_path) > 0 ? libcupti_path : NULL,
+                 strlen(cuda_path) > 0 ? cuda_path : NULL) != DYNAMIC_BINDING_STATUS_OK) {
     EEMSG("hpcrun: unable to bind to NVIDIA CUPTI library %s\n", dlerror());
     monitor_real_exit(-1);
   }

@@ -192,7 +192,7 @@ flush_alarm_handler(int sig, siginfo_t* siginfo, void* context)
 
 
 #define CUPTI_LIBRARY_LOCATION "/lib64/libcupti.so"
-#define CUPTI_PATH_FROM_CUDA "extras/CUPTI"
+#define CUPTI_PATH_FROM_CUDA "/extras/CUPTI"
 
 
 #define HPCRUN_CUPTI_ACTIVITY_BUFFER_SIZE (16 * 1024 * 1024)
@@ -543,7 +543,7 @@ CUPTI_FN
 
 #ifndef HPCRUN_STATIC_LINK
 int
-cuda_path
+search_cuda_path
 (
  struct dl_phdr_info *info,
  size_t size,
@@ -576,18 +576,49 @@ cupti_set_default_path(char *buffer)
   strcpy(buffer, CUPTI_INSTALL_PREFIX CUPTI_LIBRARY_LOCATION);
 }
 
-int
+static int
 library_path_resolves(const char *buffer)
 {
   struct stat sb;
   return stat(buffer, &sb) == 0;
 }
 
+static int
+search_libcupti_from_cuda_path(char *cuda_path, char *out_path)
+{
+  if (cuda_path == NULL || out_path == NULL) {
+    return 0;
+  }
+  out_path[0] = 0;
+  strcat(out_path, cuda_path);
+  if (strlen(out_path) > 0 && out_path[strlen(out_path) - 1] == '/') {
+    out_path[strlen(out_path) - 1] = 0; // remove trailing slash
+  }
+  int zero_index = strlen(out_path);
+  strcat(out_path, CUPTI_LIBRARY_LOCATION);
+  if (library_path_resolves(out_path)) {
+    // path is "$CUDA_PATH/lib64/libcupti.so"
+    return 1;
+  } else {
+    out_path[zero_index] = 0;
+    strcat(out_path, CUPTI_PATH_FROM_CUDA CUPTI_LIBRARY_LOCATION);
+    if (library_path_resolves(out_path)) {
+      // path is "$CUDA_PATH/extras/CUPTI/lib64/libcupti.so"
+      return 1;
+    } else {
+      fprintf(stderr, "NOTE: CUDA root at %s lacks a copy of NVIDIA's CUPTI "
+        "tools library.\n", cuda_path);
+      out_path[0] = 0;
+      return 0;   
+    }
+  }
+}
 
 static const char *
-cupti_path
+libcupti_path
 (
-  void
+  char *manual_libcupti_path,
+  char *manual_cuda_path
 )
 {
   const char *path = "libcupti.so";
@@ -596,32 +627,39 @@ cupti_path
   static char buffer[PATH_MAX];
   buffer[0] = 0;
 
-  // open an NVIDIA library to find the CUDA path with dl_iterate_phdr
-  // note: a version of this file with a more specific name may
-  // already be loaded. thus, even if the dlopen fails, we search with
-  // dl_iterate_phdr.
-  void *h = monitor_real_dlopen("libcudart.so", RTLD_LOCAL | RTLD_LAZY);
+  if (manual_libcupti_path) {
 
-  if (dl_iterate_phdr(cuda_path, buffer)) {
-    // invariant: buffer contains CUDA home
-    int zero_index = strlen(buffer);
-    strcat(buffer, CUPTI_LIBRARY_LOCATION);
-
-    if (library_path_resolves(buffer)) {
+    if (library_path_resolves(manual_libcupti_path)) {
+      strcat(buffer, manual_libcupti_path);
       path = buffer;
       resolved = 1;
     } else {
-      buffer[zero_index] = 0;
-      strcat(buffer, CUPTI_PATH_FROM_CUDA CUPTI_LIBRARY_LOCATION);
+      fprintf(stderr, "NOTE: User-specified path for NVIDIA's CUPTI tools "
+        "library %s does not exist.\n", manual_libcupti_path);
+    }
+  }
 
-      if (library_path_resolves(buffer)) {
-        path = buffer;
-        resolved = 1;
-      } else {
-        buffer[zero_index - 1] = 0;
-        fprintf(stderr, "NOTE: CUDA root at %s lacks a copy of NVIDIA's CUPTI "
-          "tools library.\n", buffer);
-      }
+  // if the user specified a CUDA path, search for libcupti.so there
+  if (manual_cuda_path) {
+    if (search_libcupti_from_cuda_path(manual_cuda_path, buffer)) {
+      path = buffer;
+      resolved = 1;
+    }
+  }
+
+  if (!resolved) {
+    char cuda_path[PATH_MAX];
+    cuda_path[0] = 0;
+    // open an NVIDIA library to find the CUDA path with dl_iterate_phdr
+    // note: a version of this file with a more specific name may
+    // already be loaded. thus, even if the dlopen fails, we search with
+    // dl_iterate_phdr.
+    void *h = monitor_real_dlopen("libcudart.so", RTLD_LOCAL | RTLD_LAZY);
+    dl_iterate_phdr(search_cuda_path, cuda_path);
+    if (h) monitor_real_dlclose(h);
+    if (search_libcupti_from_cuda_path(cuda_path, buffer)) {
+      path = buffer;
+      resolved = 1;
     }
   }
 
@@ -630,13 +668,13 @@ cupti_path
     if (library_path_resolves(buffer)) {
       fprintf(stderr, "NOTE: Using builtin path for NVIDIA's CUPTI tools "
         "library %s.\n", buffer);
+      // path is "$CUPTI_INSTALL_PREFIX/lib64/libcupti.so"
       path = buffer;
       resolved = 1;
     }
   }
 
-  if (h) monitor_real_dlclose(h);
-
+  // if resolved == 0 then path is "libcupti.so"
   return path;
 }
 
@@ -645,13 +683,14 @@ cupti_path
 int
 cupti_bind
 (
-  void
+  char *manual_libcupti_path,
+  char *manual_cuda_path
 )
 {
 #ifndef HPCRUN_STATIC_LINK
   // dynamic libraries only availabile in non-static case
   hpcrun_force_dlopen(true);
-  CHK_DLOPEN(cupti, cupti_path(), RTLD_NOW | RTLD_GLOBAL);
+  CHK_DLOPEN(cupti, libcupti_path(manual_libcupti_path, manual_cuda_path), RTLD_NOW | RTLD_GLOBAL);
   hpcrun_force_dlopen(false);
 
 #define CUPTI_BIND(fn) \

@@ -96,7 +96,8 @@ typedef enum {
 int
 cupti_bind
 (
- void
+ char *manual_libcupti_path,
+ char *manual_cuda_path
 );
 
 
