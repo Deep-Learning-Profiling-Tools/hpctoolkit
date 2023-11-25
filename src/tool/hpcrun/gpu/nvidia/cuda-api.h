@@ -87,7 +87,8 @@ typedef struct cuda_device_property {
 int
 cuda_bind
 (
- void
+ char* manual_libcuda_path,
+ char* manual_cuda_path
 );
 
 
